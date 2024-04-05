@@ -44,7 +44,7 @@ Adopting new software can be challenging, but with CorporateHub, you're never al
 
 ## Pricing
 
-The CorporateHub license is priced at $750 per company. This one-time fee grants your organization full access to all the powerful features and regular product updates. Our pricing model is designed to be transparent and cost-effective, ensuring that you can achieve maximum ROI without hidden costs or surprises.
+The CorporateHub license is priced at $550 per company. This one-time fee grants your organization full access to all the powerful features and regular product updates. Our pricing model is designed to be transparent and cost-effective, ensuring that you can achieve maximum ROI without hidden costs or surprises.
 
 ---
 
@@ -58,7 +58,6 @@ By investing in CorporateHub, you're not just acquiring a software repository; y
 
 ## Get Started
 
-Experience the power of CorporateHub firsthand by visiting our GitHub repository: [link to your repository]
 
 Don't settle for ordinary software solutions. Embrace the future of corporate productivity with CorporateHub and witness the transformation that awaits your company.
 
