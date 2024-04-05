@@ -1,7 +1,6 @@
 <h1 align="center">CorporateHub</h1>
 
-<p align="center"><img src="https://i.ibb.co/Gpny7Bg/d6fd8d06-8e3c-4569-9ae1-f334d1e92c5c.jpg" alt="CorporateHub Logo"></p>
-
+<a href="https://ibb.co/RbYf2ZL"><img src="https://i.ibb.co/Gpny7Bg/d6fd8d06-8e3c-4569-9ae1-f334d1e92c5c.jpg" alt="d6fd8d06-8e3c-4569-9ae1-f334d1e92c5c" border="0"></a>
 <p align="center">A revolutionary software repository for corporate companies</p>
 
 ---
