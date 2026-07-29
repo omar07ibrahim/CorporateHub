@@ -200,12 +200,17 @@ class PublicBaselineTests(unittest.TestCase):
 
     def test_wrapper_hashes_are_bound_to_notices(self) -> None:
         notice = NOTICE.read_text(encoding="utf-8")
-        notice_rows = {
-            cells[0]: cells
+        parsed_rows = [
+            cells
             for line in notice.splitlines()
             if len(cells := [cell.strip() for cell in line.split("|")[1:-1]]) == 3
             and cells[0].startswith("`")
-        }
+        ]
+        filenames = [cells[0] for cells in parsed_rows]
+        self.assertEqual(len(WRAPPER_HASHES), len(parsed_rows))
+        self.assertEqual(len(filenames), len(set(filenames)))
+
+        notice_rows = {cells[0]: cells for cells in parsed_rows}
         self.assertEqual({f"`{filename}`" for filename in WRAPPER_HASHES}, set(notice_rows))
         for filename, expected_hash in WRAPPER_HASHES.items():
             with self.subTest(filename=filename):
