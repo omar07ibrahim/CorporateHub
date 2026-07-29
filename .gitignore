@@ -1,0 +1,62 @@
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local environments and configuration
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# SQLite databases and sidecars
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Logs and runtime plate/frame images
+*.log
+/logs/
+/images/
+/blacklist_matches/
+/detection_history/
+
+# Generated reports and exports
+/reports/
+/exports/
+/report_exports/
+/report_images/
+
+# Camera captures and video inputs
+/camera/
+/captures/
+/recordings/
+/videos/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.mpeg
+
+# Proprietary/native runtime binaries
+*.dll
+*.so
+*.dylib
+*.pyd
+*.exe

@@ -337,38 +337,34 @@ class MainApp:
 
 def main():
     """
-    Точка входа в программу. Спрашивает пароль, при верном пароле запускает Tkinter-приложение.
+    Точка входа в trusted-local прототип без аутентификации или авторизации.
     """
-    password = simpledialog.askstring("Password", "Enter password:", show="*")
-    if password == "boris":
-        root = tk.Tk()
-        root.geometry("800x600")
-        root.minsize(600, 400)
-        app = MainApp(root)
-        root.protocol("WM_DELETE_WINDOW", app.on_closing)
+    root = tk.Tk()
+    root.geometry("800x600")
+    root.minsize(600, 400)
+    app = MainApp(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_closing)
 
-        def setup_style():
-            style = ttk.Style()
-            style.configure('Danger.TLabel', foreground='red', font=('Helvetica', 10, 'bold'))
-            style.configure('TButton', padding=6)
-            style.configure('TEntry', padding=3)
-            style.configure('TLabel', padding=3)
-            style.configure("Treeview", background="#ffffff", foreground="black", rowheight=25, fieldbackground="#ffffff")
-            style.map('Treeview', background=[('selected', '#0078D7')])
+    def setup_style():
+        style = ttk.Style()
+        style.configure('Danger.TLabel', foreground='red', font=('Helvetica', 10, 'bold'))
+        style.configure('TButton', padding=6)
+        style.configure('TEntry', padding=3)
+        style.configure('TLabel', padding=3)
+        style.configure("Treeview", background="#ffffff", foreground="black", rowheight=25, fieldbackground="#ffffff")
+        style.map('Treeview', background=[('selected', '#0078D7')])
 
-        setup_style()
-        
-        # Центрируем окно на экране
-        root.update_idletasks()
-        width = root.winfo_width()
-        height = root.winfo_height()
-        x = (root.winfo_screenwidth() // 2) - (width // 2)
-        y = (root.winfo_screenheight() // 2) - (height // 2)
-        root.geometry(f"{width}x{height}+{x}+{y}")
-        
-        root.mainloop()
-    else:
-        messagebox.showerror("Error", "Incorrect password")
+    setup_style()
+
+    # Центрируем окно на экране
+    root.update_idletasks()
+    width = root.winfo_width()
+    height = root.winfo_height()
+    x = (root.winfo_screenwidth() // 2) - (width // 2)
+    y = (root.winfo_screenheight() // 2) - (height // 2)
+    root.geometry(f"{width}x{height}+{x}+{y}")
+
+    root.mainloop()
 
 
 if __name__ == "__main__":
