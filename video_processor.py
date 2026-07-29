@@ -12,6 +12,7 @@ from DTKLPR5 import DTKLPRLibrary, LPREngine, LPRParams, BURN_POS
 from DTKVID import DTKVIDLibrary, VideoCapture
 
 from database import DB
+from path_policy import managed_path, safe_path_component
 from utils import format_time, extract_timestamp_from_filename
 
 
@@ -162,19 +163,29 @@ class VideoProcessor:
         Сохраняет дополнительные изображения для каждого обнаружения.
         """
         try:
-            # Создаем папку для сохранения истории обнаружений
-            os.makedirs("detection_history", exist_ok=True)
-            
             # Формируем уникальные имена файлов (включаем timestamp для уникальности)
             plate_text = plate.Text()
             ts_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-            
+
             # Сохраняем изображения в отдельных папках для каждого номера
-            plate_dir = f"detection_history/{plate_text}"
-            os.makedirs(plate_dir, exist_ok=True)
-            
-            pp = f"{plate_dir}/{plate_text}_plate_{ts_str}.jpg"
-            fp = f"{plate_dir}/{plate_text}_frame_{ts_str}.jpg"
+            plate_component = safe_path_component(plate_text)
+            timestamp_component = safe_path_component(ts_str)
+            plate_dir = managed_path("detection_history", plate_component)
+            plate_dir.mkdir(parents=True, exist_ok=True)
+            # Re-check after creation so an existing symlink cannot redirect this
+            # ordinary path outside the managed directory.
+            plate_dir = managed_path("detection_history", plate_component)
+
+            pp = managed_path(
+                "detection_history",
+                plate_component,
+                f"{plate_component}_plate_{timestamp_component}.jpg",
+            )
+            fp = managed_path(
+                "detection_history",
+                plate_component,
+                f"{plate_component}_frame_{timestamp_component}.jpg",
+            )
 
             # Сохраняем изображения
             plate.GetPlateImage().save(pp)
@@ -203,7 +214,14 @@ class VideoProcessor:
             img.save(fp)
             
             # Добавляем запись в базу данных
-            self.db.add_plate_detection(pid, timestamp, self.video_filename, plate.Confidence(), pp, fp)
+            self.db.add_plate_detection(
+                pid,
+                timestamp,
+                self.video_filename,
+                plate.Confidence(),
+                str(pp),
+                str(fp),
+            )
             
         except Exception as e:
             logging.error(f"Error adding detection history: {e}", exc_info=True)
@@ -216,8 +234,13 @@ class VideoProcessor:
         - Обновляем метку в UI
         """
         try:
-            os.makedirs("blacklist_matches", exist_ok=True)
-            fp = f"blacklist_matches/{plate.Text()}_{ts}.jpg"
+            managed_path("blacklist_matches").mkdir(parents=True, exist_ok=True)
+            plate_component = safe_path_component(plate.Text())
+            timestamp_component = safe_path_component(str(ts))
+            fp = managed_path(
+                "blacklist_matches",
+                f"{plate_component}_{timestamp_component}.jpg",
+            )
             img = plate.GetImage()
 
             # Обводим красным
@@ -241,7 +264,7 @@ class VideoProcessor:
             img.save(fp)
 
             self.db.exec('UPDATE plates SET is_blacklisted=1 WHERE id=?', (pid,))
-            self.db.add_blacklist_alert(plate.Text(), fp)
+            self.db.add_blacklist_alert(plate.Text(), str(fp))
 
             # Обновление статуса в интерфейсе
             self.status_widgets['status_label'].config(
@@ -257,13 +280,21 @@ class VideoProcessor:
         """
         try:
             pid = plate_data['id']
-            os.makedirs("images", exist_ok=True)
+            managed_path("images").mkdir(parents=True, exist_ok=True)
 
             # --- FIX: Sanitize the timestamp for the filename ---
             # Create a safe timestamp string for filenames by replacing invalid characters
             filename_ts = ts.replace(":", "-").replace("T", "_").split(".")[0]
-            pp = f"images/{plate.Text()}_plate_{filename_ts}.jpg"
-            fp = f"images/{plate.Text()}_frame_{filename_ts}.jpg"
+            plate_component = safe_path_component(plate.Text())
+            timestamp_component = safe_path_component(filename_ts)
+            pp = managed_path(
+                "images",
+                f"{plate_component}_plate_{timestamp_component}.jpg",
+            )
+            fp = managed_path(
+                "images",
+                f"{plate_component}_frame_{timestamp_component}.jpg",
+            )
             # --- End of FIX ---
 
             plate.GetPlateImage().save(pp)
@@ -334,11 +365,19 @@ class VideoProcessor:
                 is_blacklisted = new_row['is_blacklisted'] # Get status from DB after insertion
 
             # --- Proceed with saving images ---
-            os.makedirs("images", exist_ok=True)
+            managed_path("images").mkdir(parents=True, exist_ok=True)
             # Use the ISO timestamp 'ts' for unique filenames
             filename_ts = ts.replace(":", "-").replace("T", "_").split(".")[0] # Create a safe timestamp string for filenames
-            pp = f"images/{pt}_plate_{filename_ts}.jpg"
-            fp = f"images/{pt}_frame_{filename_ts}.jpg"
+            plate_component = safe_path_component(pt)
+            timestamp_component = safe_path_component(filename_ts)
+            pp = managed_path(
+                "images",
+                f"{plate_component}_plate_{timestamp_component}.jpg",
+            )
+            fp = managed_path(
+                "images",
+                f"{plate_component}_frame_{timestamp_component}.jpg",
+            )
 
             plate.GetPlateImage().save(pp)
             img = plate.GetImage()

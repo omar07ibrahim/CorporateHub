@@ -24,6 +24,36 @@ at the operating-system boundary. Do not include credentials in RTSP URLs used
 for development evidence. Review images and reports for personal data before
 sharing them.
 
+## Bounded path-policy coverage
+
+New files created by the four plate-derived image-write sites use a bounded
+ASCII component policy and are checked against one of three project-local
+managed roots: `images/`, `detection_history/`, or `blacklist_matches/`.
+Uppercase ASCII plate components remain unchanged. Lowercase/case variants,
+unsafe or normalized values, reserved names, overlong values, and raw values
+that resemble a generated digest-suffixed name receive a digest suffix. This
+avoids ordinary case-fold and raw/generated-namespace collisions, subject to
+the collision resistance of the truncated SHA-256 digest. Existing symlink
+escapes are rejected. Detection-folder actions derive that managed path instead
+of executing a shell command, and both folder and exported report opening use
+encoded local-file URIs.
+
+Raw recognition text remains in legacy database, UI, matching/cache, and
+logging flows; only the new managed filenames use derived components. Logging
+redaction is a later rehabilitation stage.
+
+This is a source-verified, defense-in-depth increment, not a complete filesystem
+sandbox or authorization boundary. Filesystem changes after validation can
+still race later operations. Other legacy read, copy, export, database, and
+logging paths have not received equivalent review. In particular, the HTML
+report generator and image-copy logic are unchanged and have not been
+runtime-tested.
+
+No legacy artifact migration is included. Older folders or files whose names
+came directly from recognition text are not renamed, moved, deleted, or
+automatically trusted. Handle them manually only after checking their privacy
+and provenance.
+
 ## Native dependency boundary
 
 `DTKLPR5.py` and `DTKVID.py` are DTK Software wrapper files. The corresponding

@@ -47,7 +47,10 @@ flowchart LR
     Reports --> DB
     Processor --> DB
     DB --> SQLite[("plates_data.db<br/>runtime data")]
-    Processor --> Images["Runtime plate/frame images"]
+    Processor --> PathPolicy["path_policy.py<br/>component + containment policy"]
+    Progress --> PathPolicy
+    Reports --> PathPolicy
+    PathPolicy --> Images["Project-local managed image roots"]
 
     Processor -. imports .-> Pillow["Pillow"]
     Processor -. imports .-> OpenCV["OpenCV"]
@@ -101,6 +104,35 @@ The code currently describes this intended file-video path:
 
 This sequence is a reading of the source, not runtime evidence.
 
+## Source-verified path-containment increment
+
+Four plate-derived image-write sites now pass filesystem components through a
+standard-library-only path policy. Ordinary uppercase ASCII identifiers such
+as `ABC123`, `AB-1234`, and `LV_42` retain their existing component names.
+Lowercase variants receive a digest suffix so they remain distinct from
+uppercase variants on case-insensitive filesystems. Components requiring
+normalization, unsafe-character replacement, reserved-name handling, or
+truncation also receive a stable digest suffix. The generated suffix namespace
+is reserved so a crafted raw ASCII value cannot claim another input's generated
+component. New writes are checked against the project-local `images/`,
+`detection_history/`, or `blacklist_matches/` root, including checks for
+existing symlink escapes. Raw recognition text remains in legacy database, UI,
+matching/cache, and logging flows; only the new managed filenames use derived
+components. Logging redaction is a later rehabilitation stage.
+
+The folder actions no longer interpolate a database path into a shell command.
+They derive a managed detection folder and pass an encoded local-file URI to
+the browser integration. Exported-report opening uses the same URI encoder.
+The HTML generator and its image-copy behavior have not been rewritten or
+runtime-tested in this increment.
+
+This policy is defense in depth, not a complete filesystem sandbox. It does not
+eliminate filesystem races, replace OS permissions, validate legacy database
+paths, or establish authorization. Existing artifacts whose names were derived
+by older code are not renamed or migrated; folder actions target the new
+component policy, so a legacy artifact may need manual, privacy-reviewed
+handling.
+
 ## Known RTSP breakage
 
 RTSP controls are visible in the source, but the path is currently broken and
@@ -119,8 +151,9 @@ baseline.
 The prototype can write license-plate text, timestamps, source filenames,
 blacklist information, SQLite data, and cropped/full-frame images to the local
 working tree. RTSP URLs may also contain credentials and are placed in UI state
-by the current code. The source does not implement encryption, authentication,
-authorization, retention enforcement, redaction, or a tested deletion
+by the current code. Apart from the bounded path-policy increment above, the
+source does not implement encryption, authentication, authorization, retention
+enforcement, redaction, a complete filesystem sandbox, or a tested deletion
 workflow. Logs and exported reports can add further copies.
 
 Use synthetic or explicitly authorized data only. Keep runtime databases,
@@ -133,8 +166,9 @@ globally ignored. See [SECURITY.md](SECURITY.md) before handling any real data.
 ## Source-only verification
 
 The source-only verification suite has only Python standard-library
-dependencies, invokes the Git CLI to enumerate commit candidates, and does not
-import project or vendor modules:
+dependencies, invokes the Git CLI to enumerate commit candidates, and imports
+the isolated standard-library-only `path_policy` module. It does not import the
+GUI, database, vendor wrappers, or native runtime:
 
 ```text
 python3 -m unittest discover -s tests -v
@@ -142,14 +176,16 @@ python3 -m unittest discover -s tests -v
 
 The checks parse Python source, verify removal of the former password gate,
 bind vendor notices to exact wrapper hashes, inspect ignore coverage and
-tracked runtime artifacts, and scan repository text for high-confidence secret
+tracked runtime artifacts, exercise the isolated path policy (including
+traversal, Unicode, length, digest, symlink, and URI cases), bind its call sites
+through AST inspection, and scan repository text for high-confidence secret
 signatures. They do not validate GUI behavior, DTK licensing, recognition
-quality, native-library loading, video processing, database concurrency, or
-RTSP operation.
+quality, native-library loading, video processing, database concurrency,
+filesystem race resistance, HTML safety, or RTSP operation.
 
 ## Repository status
 
-This is the first public-baseline stage. Planned follow-up work must preserve
+This is a source-only rehabilitation stage. Planned follow-up work must preserve
 the vendor boundary, add reproducible dependency/runtime fixtures where
-licensing permits, repair behavior behind tests, and capture only real,
-sanitized, reproducible visual evidence.
+licensing permits, repair remaining behavior behind tests, and capture only
+real, sanitized, reproducible visual evidence.

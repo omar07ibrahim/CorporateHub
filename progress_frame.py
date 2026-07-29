@@ -5,8 +5,11 @@ from tkinter import ttk, simpledialog
 import os
 import threading
 import datetime
+import logging
+import webbrowser
 
 from database import DB
+from path_policy import local_file_uri, managed_path, safe_path_component
 from utils import format_time, extract_timestamp_from_filename
 
 
@@ -444,17 +447,14 @@ Image Paths:
             
             # Кнопка для открытия папки с изображениями
             def open_image_folder():
-                folder_path = os.path.dirname(detection['frame_image_path'])
                 try:
-                    if os.name == 'nt':  # Windows
-                        os.startfile(folder_path)
-                    elif os.name == 'posix':  # macOS, Linux
-                        try:
-                            os.system(f'xdg-open "{folder_path}"')
-                        except:
-                            os.system(f'open "{folder_path}"')
+                    plate_component = safe_path_component(str(detection['plate_text']))
+                    folder_path = managed_path("detection_history", plate_component)
+                    if folder_path.is_dir():
+                        webbrowser.open(local_file_uri(folder_path))
+                    else:
+                        logging.info("Managed detection folder does not exist: %s", folder_path)
                 except Exception as e:
-                    import logging
                     logging.error(f"Error opening folder: {e}")
             
             # Кнопка для добавления в blacklist

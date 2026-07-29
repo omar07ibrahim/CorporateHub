@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 import shutil # Import shutil for copying files
 
 from database import DB
+from path_policy import local_file_uri, managed_path, safe_path_component
 from utils import load_and_resize_image, parse_date, decode_if_bytes, calculate_time_difference,is_potential_follow 
 
 
@@ -243,26 +244,20 @@ class ReportPanel:
             return
 
         plate_text = self.tree.item(selection[0])['values'][0]
-        # Ensure folder name is valid (replace problematic characters if needed)
-        safe_plate_text = "".join(c if c.isalnum() else "_" for c in plate_text)
-        folder_path = os.path.join("detection_history", safe_plate_text)
-
-        if os.path.exists(folder_path):
-            # Открываем папку в проводнике
-            try:
-                # Use os.path.abspath for robustness
-                abs_folder_path = os.path.abspath(folder_path)
-                if os.name == 'nt':  # Windows
-                    os.startfile(abs_folder_path)
-                elif os.name == 'posix':  # macOS, Linux
-                    webbrowser.open(f"file://{abs_folder_path}") # More reliable cross-platform way
-                else:
-                    webbrowser.open(f"file://{abs_folder_path}") # Fallback
-            except Exception as e:
-                logging.error(f"Failed to open folder: {abs_folder_path} - {str(e)}")
-                messagebox.showerror("Error", f"Failed to open folder: {str(e)}")
-        else:
-            messagebox.showinfo("Info", f"Detection history folder for plate {plate_text} does not exist ({folder_path})")
+        try:
+            plate_component = safe_path_component(str(plate_text))
+            folder_path = managed_path("detection_history", plate_component)
+            if folder_path.is_dir():
+                webbrowser.open(local_file_uri(folder_path))
+            else:
+                messagebox.showinfo(
+                    "Info",
+                    f"Detection history folder for plate {plate_text} "
+                    f"does not exist ({folder_path})",
+                )
+        except Exception as e:
+            logging.error(f"Failed to open managed detection folder: {str(e)}")
+            messagebox.showerror("Error", f"Failed to open folder: {str(e)}")
 
     def analyze_similar_plates(self):
         """
@@ -988,8 +983,7 @@ class ReportPanel:
                 # Открываем отчет в браузере
                 if messagebox.askyesno("Open Report", "Would you like to open the exported report in your browser?"):
                      try:
-                         abs_path = os.path.abspath(path)
-                         webbrowser.open('file://' + abs_path)
+                         webbrowser.open(local_file_uri(path))
                      except Exception as e_open:
                          logging.error(f"Failed to open report in browser: {e_open}")
                          messagebox.showwarning("Browser Error", f"Could not automatically open the report: {e_open}")
@@ -1754,4 +1748,3 @@ class ReportPanel:
         dialog.geometry(f'+{x}+{y}')
 
         dialog.wait_window() # Wait until the dialog is closed
-
