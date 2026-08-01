@@ -2,15 +2,16 @@
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
-import os
 import datetime
 import logging
+import queue
+import threading
 import webbrowser
 from PIL import Image, ImageTk
-import shutil # Import shutil for copying files
 
 from database import DB
 from path_policy import local_file_uri, managed_path, safe_path_component
+from report_export import export_offline_report
 from utils import load_and_resize_image, parse_date, decode_if_bytes, calculate_time_difference,is_potential_follow 
 
 
@@ -21,12 +22,13 @@ class ReportPanel:
     - Детальная информация и изображения
     - История обнаружений с временными метками
     - Похожие номера
-    - Статистика и экспорт отчета в HTML
+    - Статистика и экспорт обезличенного offline-отчета
     """
     def __init__(self, master):
         self.master = master
         self.db = DB()
         self.current_sort = {'column': None, 'reverse': False}
+        self._report_export_active = False
         self.setup_ui()
         self.load_data()
 
@@ -953,708 +955,119 @@ class ReportPanel:
         frame_label.image = frame_image # Keep reference to prevent garbage collection
 
     def export_report(self):
-        """
-        Экспорт всего списка plates в HTML-отчет со статистикой и копированием изображений.
-        """
-        path = filedialog.asksaveasfilename(defaultextension=".html",
-                                            filetypes=[("HTML files", "*.html")],
-                                            title="Save HTML Report As")
-        if path:
+        """Export one immutable, redacted bundle from a read-only DB snapshot."""
+        if self._report_export_active:
+            messagebox.showinfo(
+                "Report Export in Progress",
+                "The current redacted report export is still running.",
+            )
+            return
+        output_parent = filedialog.askdirectory(
+            title="Select Folder for Redacted Offline Report",
+            mustexist=True,
+        )
+        if not output_parent:
+            return
+
+        progress_window = tk.Toplevel(self.master)
+        progress_window.title("Exporting Report")
+        progress_window.geometry("300x100")
+        progress_window.transient(self.master)
+        progress_window.grab_set()
+        progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
+        ttk.Label(
+            progress_window,
+            text="Building a redacted offline snapshot...",
+        ).pack(pady=10)
+        progress = ttk.Progressbar(progress_window, mode="indeterminate")
+        progress.pack(fill=tk.X, padx=20, pady=10)
+        progress.start()
+        self.master.update_idletasks()
+
+        completion_queue = queue.SimpleQueue()
+        self._report_export_active = True
+
+        def finish_export(export_result, error):
+            progress.stop()
             try:
-                # Show progress/loading indicator
-                progress_window = tk.Toplevel(self.master)
-                progress_window.title("Exporting Report")
-                progress_window.geometry("300x100")
-                progress_window.transient(self.master)
-                progress_window.grab_set()
-                ttk.Label(progress_window, text="Gathering data and generating report...").pack(pady=10)
-                progress = ttk.Progressbar(progress_window, mode='indeterminate')
-                progress.pack(fill=tk.X, padx=20, pady=10)
-                progress.start()
-                self.master.update_idletasks()
+                progress_window.grab_release()
+            except tk.TclError:
+                pass
+            if progress_window.winfo_exists():
+                progress_window.destroy()
+            self._report_export_active = False
 
-                plates_data = self.db.get_all_plates() # Fetch all plates
-                self.export_html(path, plates_data) # Generate the report
+            if error is not None:
+                logging.error(
+                    "Redacted report export failed (%s): %s",
+                    type(error).__name__,
+                    error,
+                )
+                messagebox.showerror(
+                    "Report Export Refused",
+                    f"The redacted report was not exported: {error}",
+                )
+                return
 
-                progress_window.destroy() # Close progress window
-
-                messagebox.showinfo("Success", "Report exported successfully!")
-
-                # Открываем отчет в браузере
-                if messagebox.askyesno("Open Report", "Would you like to open the exported report in your browser?"):
-                     try:
-                         webbrowser.open(local_file_uri(path))
-                     except Exception as e_open:
-                         logging.error(f"Failed to open report in browser: {e_open}")
-                         messagebox.showwarning("Browser Error", f"Could not automatically open the report: {e_open}")
-
-
-            except Exception as e:
-                if 'progress_window' in locals() and progress_window.winfo_exists():
-                    progress_window.destroy()
-                logging.error(f"Failed to export report: {e}", exc_info=True)
-                messagebox.showerror("Error", f"Failed to export report: {str(e)}")
-
-    def export_html(self, path, plates_data):
-        """
-        Формирует HTML-файл отчета и копирует изображения в отдельную папку report_images.
-        Включает историю обнаружений и похожие номера.
-        """
-        report_dir = os.path.dirname(path)
-        images_dir = os.path.join(report_dir, 'report_images')
-        os.makedirs(images_dir, exist_ok=True)
-
-        # Helper function to safely access sqlite3.Row objects like a dict with get behavior
-        def safe_get(row, key, default=None):
-            try:
-                return row[key] if key in row.keys() else default
-            except (IndexError, TypeError, KeyError):
-                return default
-
-        def copy_image(src_path):
-            src_path = decode_if_bytes(src_path) # Ensure path is string
-            if src_path and os.path.exists(src_path):
+            completion_message = (
+                "The immutable offline report omits raw identifiers, "
+                "timestamps, source names, reasons, paths, and images.\n\n"
+                f"Bundle: {export_result.bundle_root.name}"
+            )
+            if export_result.durability_warning is not None:
+                completion_message += (
+                    "\n\nDurability warning: "
+                    f"{export_result.durability_warning}."
+                )
+                messagebox.showwarning(
+                    "Redacted Report Published with Warning",
+                    completion_message,
+                )
+            else:
+                messagebox.showinfo(
+                    "Redacted Report Ready",
+                    completion_message,
+                )
+            if messagebox.askyesno(
+                "Open Report",
+                "Would you like to open the exported report in your browser?",
+            ):
                 try:
-                    filename = os.path.basename(src_path)
-                    # Make filename slightly more unique if needed (e.g., add timestamp prefix)
-                    # timestamp_prefix = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f_")
-                    # dst_filename = timestamp_prefix + filename
-                    dst_path = os.path.join(images_dir, filename) # Use original filename for simplicity
-                    if not os.path.exists(dst_path): # Avoid redundant copies
-                        shutil.copy2(src_path, dst_path)
-                    # Use relative path for HTML
-                    return f'report_images/{filename}'
-                except Exception as e:
-                    logging.error(f"Failed to copy image {src_path} to {images_dir}: {e}")
-            return None # Return None if copy fails or source doesn't exist
+                    webbrowser.open(local_file_uri(export_result.index_path))
+                except Exception as open_error:
+                    logging.error("Failed to open report in browser: %s", open_error)
+                    messagebox.showwarning(
+                        "Browser Error",
+                        f"Could not automatically open the report: {open_error}",
+                    )
 
-        report_data = []
-        profiles = set()
-        dates_dict = {} # For chart data {date_str: count}
+        def poll_completion():
+            try:
+                completed_result, error = completion_queue.get_nowait()
+            except queue.Empty:
+                self.master.after(50, poll_completion)
+                return
+            finish_export(completed_result, error)
 
-        # Analyze similar and tracking plates *once* for the entire report
+        def run_export():
+            try:
+                export_result = export_offline_report(self.db.path, output_parent)
+            except Exception as error:
+                completion_queue.put((None, error))
+            else:
+                completion_queue.put((export_result, None))
+
+        worker = threading.Thread(
+            target=run_export,
+            name="CorporateHub-report-export",
+            daemon=True,
+        )
         try:
-            all_similar_pairs_data = self.db.analyze_similar_plates()
-        except Exception as e:
-            logging.error(f"Error analyzing similar plates for report: {e}")
-            all_similar_pairs_data = []
-
-        try:
-            all_following_plates_data = self.db.find_potential_follow_plates()
-            following_plate_ids = {fp['plate']['id']: fp['reason'] for fp in all_following_plates_data}
-        except Exception as e:
-            logging.error(f"Error finding potential tracking plates for report: {e}")
-            following_plate_ids = {}
-
-
-        plate_ids_for_detections = [p['id'] for p in plates_data]
-        all_detections_map = {}
-        if plate_ids_for_detections:
-            all_detections_list = self.db.get_detections_for_plates(plate_ids_for_detections)
-            for det in all_detections_list:
-                p_id = det['plate_id']
-                if p_id not in all_detections_map:
-                    all_detections_map[p_id] = []
-                all_detections_map[p_id].append(det)
-
-
-        # Process each plate
-        for plate in plates_data:
-            plate_id = plate['id']
-            plate_dict = dict(plate) # Make a mutable copy
-
-            # Decode byte strings and copy images
-            plate_dict['plate_text'] = decode_if_bytes(plate['plate_text'])
-            plate_dict['country_code'] = decode_if_bytes(safe_get(plate, 'country_code', ''))
-            plate_dict['profile'] = decode_if_bytes(safe_get(plate, 'profile', ''))
-            plate_dict['blacklist_reason'] = decode_if_bytes(safe_get(plate, 'blacklist_reason', ''))
-            plate_dict['danger_level'] = decode_if_bytes(safe_get(plate, 'danger_level', ''))
-
-            # Handle image paths
-            plate_image_path = safe_get(plate, 'plate_image_path')
-            frame_image_path = safe_get(plate, 'frame_image_path')
-            plate_dict['plate_image'] = copy_image(plate_image_path)
-            plate_dict['frame_image'] = copy_image(frame_image_path)
-
-            # Format dates
-            first_app = parse_date(decode_if_bytes(safe_get(plate, 'first_appearance')))
-            last_app = parse_date(decode_if_bytes(safe_get(plate, 'last_appearance')))
-            plate_dict['first_appearance'] = first_app.strftime('%Y-%m-%d %H:%M:%S') if first_app else 'N/A'
-            plate_dict['last_appearance'] = last_app.strftime('%Y-%m-%d %H:%M:%S') if last_app else 'N/A'
-
-
-            # Process detection history for this plate
-            detections = all_detections_map.get(plate_id, [])
-            detection_history = []
-            valid_timestamps = []
-            unique_video_sources = set()
-
-            # Sort detections by time for timeline consistency
-            detections.sort(key=lambda d: 
-                parse_date(decode_if_bytes(safe_get(d, 'real_timestamp')) or 
-                        decode_if_bytes(safe_get(d, 'detection_time'))) 
-                or datetime.datetime.min)
-
-            for d in detections:
-                # Get timestamps
-                detection_time_str = decode_if_bytes(safe_get(d, 'detection_time', ''))
-                real_timestamp_str = decode_if_bytes(safe_get(d, 'real_timestamp', ''))
-                dt_time = parse_date(detection_time_str)
-                rt_time = parse_date(real_timestamp_str)
-
-                # Get source file and track unique videos
-                source_file = decode_if_bytes(safe_get(d, 'source_file', 'Unknown'))
-                if source_file and source_file != 'Unknown':
-                    unique_video_sources.add(source_file)
-
-                detection_dict = {
-                    'detection_time': dt_time.strftime('%Y-%m-%d %H:%M:%S') if dt_time else detection_time_str or 'Unknown',
-                    'real_timestamp': rt_time.strftime('%Y-%m-%d %H:%M:%S') if rt_time else real_timestamp_str or 'Unknown',
-                    'source_file': source_file,
-                    'confidence': safe_get(d, 'confidence', 0.0),
-                    'plate_image': copy_image(safe_get(d, 'plate_image_path')),
-                    'frame_image': copy_image(safe_get(d, 'frame_image_path')),
-                    'timestamp_obj': rt_time or dt_time # Store for sorting/interval calc
-                }
-                detection_history.append(detection_dict)
-                if rt_time: valid_timestamps.append(rt_time)
-                elif dt_time: valid_timestamps.append(dt_time)
-
-
-            plate_dict['detection_history'] = detection_history
-            unique_videos_count = len(unique_video_sources)
-            plate_dict['unique_videos'] = unique_videos_count
-
-            # Check if in identified following plates (from DB analysis)
-            plate_dict['is_following'] = plate_id in following_plate_ids
-            plate_dict['follow_reason'] = following_plate_ids.get(plate_id, "")
-
-            # Additional check for tracking (appears in more than 4 video files)
-            if unique_videos_count >= 4 and not plate_dict['is_following']:
-                plate_dict['is_following'] = True
-                plate_dict['follow_reason'] = f"Detected in {unique_videos_count} different video files"
-
-
-            # Add to profile set and date dict
-            profiles.add(plate_dict['profile'])
-            if first_app:
-                date_str = first_app.strftime('%Y-%m-%d')
-                dates_dict[date_str] = dates_dict.get(date_str, 0) + 1
-
-            report_data.append(plate_dict)
-
-        # Calculate overall stats
-        total_plates = len(report_data)
-        if total_plates > 0:
-            # Ensure confidence is float before summing
-            valid_confs = [float(p['confidence']) for p in report_data if isinstance(p.get('confidence'), (int, float, str)) and str(p.get('confidence')).replace('.', '', 1).isdigit()]
-            avg_conf = sum(valid_confs) / len(valid_confs) if valid_confs else 0
-        else:
-            avg_conf = 0
-
-        # Count tracking plates including the additional 4+ videos criterion
-        tracking_count = sum(1 for p in report_data if p.get('is_following'))
-
-        stats = {
-            'total_plates': total_plates,
-            'total_detections': sum(int(p.get('total_appearances', 1)) for p in report_data), # Sum appearances from main table
-            'total_all_detections': sum(len(p['detection_history']) for p in report_data), # Count history events
-            'blacklisted': sum(1 for p in report_data if p.get('is_blacklisted')),
-            'avg_confidence': avg_conf,
-            'countries': len({p['country_code'] for p in report_data if p.get('country_code')}),
-            'profiles': len(profiles),
-            'similar_plates': len(all_similar_pairs_data), # Use pre-analyzed count
-            'tracking_plates': tracking_count # Use pre-analyzed count PLUS our 4+ videos criterion
-        }
-
-
-        # Prepare chart data
-        sorted_dates = sorted(dates_dict.keys())
-        date_labels = str(sorted_dates) # Convert list to string representation for JS
-        date_values = str([dates_dict[d] for d in sorted_dates]) # Convert list to string for JS
-
-        # Correct calculation for pie chart (avoid double counting)
-        normal_plates = stats['total_plates'] - stats['blacklisted'] - stats['tracking_plates']
-        normal_plates = max(0, normal_plates) # Ensure it's not negative
-        pie_data = str([stats['blacklisted'], stats['tracking_plates'], normal_plates])
-
-
-        # --- Create HTML ---
-        # (Using f-string; be careful with quotes inside expressions)
-        html_content = f'''<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>LPR System Report - {datetime.datetime.now().strftime('%Y-%m-%d')}</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-            .container {{ max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-            .header {{ text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #eee; }}
-            h1, h2, h3, h4 {{ color: #333; }}
-            .stats {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }}
-            .stat-card {{ background-color: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; border: 1px solid #eee; }}
-            .stat-card h3 {{ margin: 0 0 8px; font-size: 1em; color: #555; }}
-            .stat-card p {{ margin: 0; font-size: 1.4em; font-weight: bold; color: #333; }}
-            .chart-container {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }}
-            .chart-box {{ background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }}
-            .tabs {{ display: flex; margin-bottom: 20px; border-bottom: 1px solid #ddd; }}
-            .tab {{ padding: 10px 20px; cursor: pointer; background-color: #eee; border: 1px solid #ddd; border-bottom: none; margin-right: 5px; border-radius: 4px 4px 0 0; }}
-            .tab.active {{ background-color: white; font-weight: bold; border-bottom: 1px solid white; position: relative; top: 1px; }}
-            .tab-content {{ display: none; padding-top: 20px; }}
-            .tab-content.active {{ display: block; }}
-            .plates {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }}
-            .plate-card {{ background-color: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: transform .2s, box-shadow .2s; }}
-            .plate-card:hover {{ transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }}
-            .plate-card.blacklisted {{ border-left: 5px solid #dc3545; }}
-            .plate-card.following {{ border-left: 5px solid #0d6efd; }}
-            .warning-block {{ padding: 10px 15px; margin-bottom: 10px; border-radius: 4px; font-weight: bold; }}
-            .blacklist-warning {{ background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }}
-            .follow-warning {{ background-color: #cce5ff; color: #004085; border: 1px solid #b8daff; }}
-            .plate-images {{ display: flex; gap: 10px; padding: 10px; background-color:#f9f9f9; border-bottom: 1px solid #eee; justify-content: center; }}
-            .plate-images img {{ max-width: 45%; height: auto; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; object-fit: contain; }}
-            .plate-info {{ padding: 15px; }}
-            .plate-info h3 {{ margin: 0 0 10px; font-size: 1.2em; }}
-            .blacklisted .plate-info h3 {{ color: #dc3545; }}
-            .following .plate-info h3 {{ color: #0d6efd; }}
-            .plate-info p {{ margin: 5px 0; color: #666; font-size: 0.9em; }}
-            .plate-info strong {{ color: #333; }}
-            .confidence {{ display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; color: white; }}
-            .detection-details {{ margin-top: 15px; padding: 15px; border-top: 1px solid #eee; background-color: #fafafa; }}
-            .detection-details h4 {{ margin: 0 0 10px; font-size: 1em; color: #444; }}
-            .detection-history table {{ width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.85em; }}
-            .detection-history th, .detection-history td {{ padding: 6px 8px; text-align: left; border-bottom: 1px solid #ddd; }}
-            .detection-history th {{ background-color: #e9ecef; font-weight: bold; }}
-            .detection-gallery {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }}
-            .detection-item {{ width: 80px; margin-bottom: 8px; position: relative; border: 1px solid #ccc; border-radius: 4px; overflow:hidden; background: #eee; }}
-            .detection-item img {{ display: block; width: 100%; height: 50px; object-fit: cover; cursor: pointer; }}
-            .detection-item .detection-time {{ font-size: 9px; background: rgba(0,0,0,0.6); color: white; padding: 2px 3px; position: absolute; bottom: 0; left: 0; right: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-            .modal {{ display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; }}
-            .modal-content {{ display: block; max-width: 90%; max-height: 85vh; }}
-            .modal-close {{ position: absolute; top: 20px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; line-height: 1; }}
-            .modal-close:hover {{ color: #bbb; }}
-            #modalCaption {{ color:white; text-align:center; padding-top:15px; font-size: 1.1em; }}
-            table.similar-table {{ width:100%; border-collapse:collapse; margin-bottom:20px; font-size: 0.9em; }}
-            table.similar-table th, table.similar-table td {{ padding: 8px 10px; text-align: left; border: 1px solid #ddd; }}
-            table.similar-table th {{ background-color: #e9ecef; font-weight: bold; }}
-            @media print {{
-                body {{ background-color: white; font-size: 10pt; }}
-                .container {{ box-shadow: none; padding: 0; }}
-                .tabs, .chart-container, .header p {{ display: none; }}
-                .plates, .stats {{ grid-template-columns: 1fr; }} /* Stack cards for printing */
-                .plate-card {{ page-break-inside: avoid; box-shadow: none; border: 1px solid #ccc; margin-bottom: 15px; }}
-                .plate-images img {{ max-width: 30%; }}
-                .modal, .modal-close {{ display: none !important; }}
-            }}
-        </style>
-    </head>
-    <body>
-    <div id="imageModal" class="modal">
-        <span class="modal-close" onclick="closeModal()">×</span>
-        <img class="modal-content" id="modalImage">
-        <div id="modalCaption"></div>
-    </div>
-
-    <div class="container">
-        <div class="header">
-            <h1>LPR System Report</h1>
-            <p>Generated on: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-        </div>
-
-        <h2>Summary Statistics</h2>
-        <div class="stats">
-            <div class="stat-card"><h3>Total Plates</h3><p>{stats['total_plates']}</p></div>
-            <div class="stat-card"><h3>Detection Events</h3><p>{stats['total_all_detections']}</p></div>
-            <div class="stat-card"><h3>Blacklisted</h3><p style="color:#dc3545">{stats['blacklisted']}</p></div>
-            <div class="stat-card"><h3>Tracking Cases</h3><p style="color:#0d6efd">{stats['tracking_plates']}</p></div>
-            <div class="stat-card"><h3>Avg. Confidence</h3><p>{stats['avg_confidence']:.1f}%</p></div>
-            <div class="stat-card"><h3>Unique Countries</h3><p>{stats['countries']}</p></div>
-            <div class="stat-card"><h3>Unique Profiles</h3><p>{stats['profiles']}</p></div>
-            <div class="stat-card"><h3>Similar Pairs</h3><p>{stats['similar_plates']}</p></div>
-        </div>
-
-        <div class="chart-container">
-            <div class="chart-box">
-                <h4>Detections by Date</h4>
-                <canvas id="detectionsByDate"></canvas>
-            </div>
-            <div class="chart-box">
-                <h4>Plate Status Breakdown</h4>
-                <canvas id="blacklistBreakdown"></canvas>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <div class="tab active" onclick="showTab('plates', this)">All Plates ({stats['total_plates']})</div>
-            <div class="tab" onclick="showTab('tracking', this)">Tracking Cases ({stats['tracking_plates']})</div>
-            <div class="tab" onclick="showTab('similar', this)">Similar Plates ({stats['similar_plates']})</div>
-        </div>
-
-        <div id="plates-tab" class="tab-content active">
-            <h2>Detected Plates</h2>
-            <div class="plates">
-    '''
-
-        # --- Loop through plates for "All Plates" tab ---
-        for plate in report_data:
-            try: # Add try-except for individual plate processing
-                plate_id = plate['id']
-                confidence_val = float(plate.get('confidence', 0.0))
-            except (ValueError, TypeError, KeyError):
-                confidence_val = 0.0
-
-            if confidence_val < 80: confidence_color = '#dc3545' # Red
-            elif confidence_val < 90: confidence_color = '#ffc107' # Yellow
-            else: confidence_color = '#28a745' # Green
-
-            card_class = ""
-            warning_block = ""
-
-            if plate.get('is_blacklisted'):
-                card_class = "blacklisted"
-                reason_text = f"Reason: {plate.get('blacklist_reason', 'N/A')}<br>Danger: {plate.get('danger_level', 'N/A')}"
-                warning_block = f'<div class="warning-block blacklist-warning">⚠️ BLACKLISTED<br>{reason_text}</div>'
-            elif plate.get('is_following'):
-                card_class = "following"
-                warning_block = f'<div class="warning-block follow-warning">👀 POTENTIAL TRACKING<br>{plate.get("follow_reason", "")}</div>'
-
-            # Ensure image paths are valid before creating img tags
-            plate_img_tag = f'<img src="{plate.get("plate_image", "")}" alt="Plate Image" onclick=\'openModal(this, "Plate: {plate["plate_text"]}")\'>' if plate.get("plate_image") else ''
-            frame_img_tag = f'<img src="{plate.get("frame_image", "")}" alt="Frame Image" onclick=\'openModal(this, "Frame: {plate["plate_text"]}")\'>' if plate.get("frame_image") else ''
-
-            html_content += f'''
-    <div class="plate-card {card_class}">
-        {warning_block}
-        <div class="plate-images">
-            {plate_img_tag}
-            {frame_img_tag}
-        </div>
-        <div class="plate-info">
-            <h3>{plate['plate_text']}</h3>
-            <p><span class="confidence" style="background-color:{confidence_color};">{confidence_val:.1f}%</span></p>
-            <p><strong>Country:</strong> {plate.get('country_code', '')}</p>
-            <p><strong>First Seen:</strong> {plate.get('first_appearance', 'N/A')}</p>
-            <p><strong>Last Seen:</strong> {plate.get('last_appearance', 'N/A')}</p>
-            <p><strong>Total Appearances:</strong> {plate.get('total_appearances', 1)}</p>
-            <p><strong>Unique Videos:</strong> {plate.get('unique_videos', 0)}</p>
-            <p><strong>Profile:</strong> {plate.get('profile', '')}</p>
-        </div>
-    '''
-            # Detection History Details
-            if plate.get('detection_history'):
-                html_content += f'''
-        <div class="detection-details">
-            <h4>Detection History ({len(plate['detection_history'])} events)</h4>
-            <div class="detection-history">
-                <table>
-                    <thead>
-                        <tr><th>Det. Time</th><th>Real Time</th><th>Source</th><th>Conf.</th></tr>
-                    </thead>
-                    <tbody>
-    '''
-                for d in plate['detection_history']:
-                    html_content += f'''
-                    <tr>
-                        <td>{d.get('detection_time','')}</td>
-                        <td>{d.get('real_timestamp','')}</td>
-                        <td>{d.get('source_file','')}</td>
-                        <td>{d.get('confidence', 0.0):.1f}%</td>
-                    </tr>'''
-                html_content += '''
-                    </tbody>
-                </table>
-            </div>
-            '''
-                # Detection Gallery
-                html_content += '''
-            <h4>Detection Gallery</h4>
-            <div class="detection-gallery">
-    '''
-                for i, d in enumerate(plate['detection_history']):
-                    frame_img = d.get('frame_image')
-                    if frame_img:
-                        # Use real timestamp if available, otherwise detection time for caption/tooltip
-                        display_time = d.get('real_timestamp') or d.get('detection_time','')
-                        # Simple time format for gallery label
-                        time_label = ""
-                        ts_obj = d.get('timestamp_obj')
-                        if ts_obj: time_label = ts_obj.strftime('%H:%M:%S')
-
-                        # Use double quotes inside the onclick string, single quotes for the attribute
-                        onclick_attr = f'onclick=\'openModal(this, "Detection {i+1} - {plate["plate_text"]} @ {display_time}")\''
-                        html_content += f'''
-                <div class="detection-item">
-                    <img src="{frame_img}" alt="Detection {i+1}" {onclick_attr}>
-                    <div class="detection-time">{time_label}</div>
-                </div>'''
-
-                html_content += '''
-            </div> <!-- end detection-gallery -->
-        </div> <!-- end detection-details -->
-    '''
-            html_content += '</div> <!-- end plate-card -->\n'
-
-        html_content += '''
-            </div> <!-- end plates -->
-        </div> <!-- end plates-tab -->
-
-        <div id="tracking-tab" class="tab-content">
-            <h2>Potential Tracking Cases</h2>
-            <div class="plates">
-    '''
-        # --- Loop through plates for "Tracking" tab ---
-        tracking_found = False
-        for plate in report_data:
-            if plate.get('is_following'):
-                tracking_found = True
-                confidence_val = float(plate.get('confidence', 0.0))
-                if confidence_val < 80: confidence_color = '#dc3545'
-                elif confidence_val < 90: confidence_color = '#ffc107'
-                else: confidence_color = '#28a745'
-
-                plate_img_tag = f'<img src="{plate.get("plate_image", "")}" alt="Plate Image" onclick=\'openModal(this, "Plate: {plate["plate_text"]}")\'>' if plate.get("plate_image") else ''
-                frame_img_tag = f'<img src="{plate.get("frame_image", "")}" alt="Frame Image" onclick=\'openModal(this, "Frame: {plate["plate_text"]}")\'>' if plate.get("frame_image") else ''
-
-
-                html_content += f'''
-    <div class="plate-card following">
-        <div class="warning-block follow-warning">👀 POTENTIAL TRACKING<br>{plate.get("follow_reason", "")}</div>
-        <div class="plate-images">
-            {plate_img_tag}
-            {frame_img_tag}
-        </div>
-        <div class="plate-info">
-            <h3>{plate['plate_text']}</h3>
-            <p><span class="confidence" style="background-color:{confidence_color};">{confidence_val:.1f}%</span></p>
-            <p><strong>Country:</strong> {plate.get('country_code', '')}</p>
-            <p><strong>First Seen:</strong> {plate.get('first_appearance', 'N/A')}</p>
-            <p><strong>Last Seen:</strong> {plate.get('last_appearance', 'N/A')}</p>
-            <p><strong>Total Appearances:</strong> {plate.get('total_appearances', 1)}</p>
-            <p><strong>Unique Videos:</strong> {plate.get('unique_videos', 0)}</p>
-        </div>
-        <div class="detection-details">
-            <h4>Detection Timeline</h4>
-            <div class="detection-gallery">
-    '''
-                # Add sorted detection gallery with intervals for tracking
-                sorted_history = plate.get('detection_history', []) # Already sorted by time
-                for i, d in enumerate(sorted_history):
-                    frame_img = d.get('frame_image')
-                    if frame_img:
-                        display_time = d.get('real_timestamp') or d.get('detection_time','')
-                        ts_obj = d.get('timestamp_obj')
-                        time_label = ts_obj.strftime('%H:%M:%S') if ts_obj else ""
-                        time_info = ""
-
-                        if i > 0 and ts_obj:
-                            prev_ts_obj = sorted_history[i-1].get('timestamp_obj')
-                            if prev_ts_obj:
-                                try:
-                                    _, interval = calculate_time_difference(prev_ts_obj, ts_obj)
-                                    time_info = f" (+{interval})" # Interval since last
-                                except:
-                                    time_info = "" # Ignore interval calc error
-
-                        onclick_attr = f'onclick=\'openModal(this, "Detection {i+1} - {plate["plate_text"]} @ {display_time}")\''
-                        html_content += f'''
-                <div class="detection-item">
-                    <img src="{frame_img}" alt="Detection {i+1}" {onclick_attr}>
-                    <div class="detection-time" title="{display_time}{time_info}">{time_label}{time_info}</div>
-                </div>'''
-
-                html_content += '''
-            </div> <!-- end detection-gallery -->
-        </div> <!-- end detection-details -->
-    </div> <!-- end plate-card -->
-    '''
-        if not tracking_found:
-            html_content += '<p>No potential tracking cases identified based on current criteria.</p>'
-
-        html_content += '''
-            </div> <!-- end plates -->
-        </div> <!-- end tracking-tab -->
-
-        <div id="similar-tab" class="tab-content">
-            <h2>Similar Plates Detected</h2>
-    '''
-        # --- Table for Similar Plates tab ---
-        if all_similar_pairs_data:
-            html_content += '''
-            <table class="similar-table">
-                <thead>
-                    <tr><th>Plate 1</th><th>Plate 2</th><th>Similarity</th><th>Time Difference</th><th>Note</th></tr>
-                </thead>
-                <tbody>
-    '''
-            for plate1_data, plate2_data, ratio, distance, time_diff_secs, note in all_similar_pairs_data:
-                # Use safe access for sqlite3.Row objects
-                plate_text1 = decode_if_bytes(safe_get(plate1_data, 'plate_text', ''))
-                plate_text2 = decode_if_bytes(safe_get(plate2_data, 'plate_text', ''))
-
-                # Format time difference
-                time_diff_str = "N/A"
-                if time_diff_secs is not None:
-                    # Dummy dates for formatting
-                    dummy_dt = datetime.datetime.now()
-                    try:
-                        _, time_diff_str = calculate_time_difference(
-                            dummy_dt, dummy_dt + datetime.timedelta(seconds=abs(time_diff_secs))
-                        )
-                    except:
-                        pass # Keep N/A on error
-
-                note_decoded = decode_if_bytes(note)
-
-                html_content += f'''
-                <tr>
-                    <td>{plate_text1}</td>
-                    <td>{plate_text2}</td>
-                    <td>{ratio:.2f}</td>
-                    <td>{time_diff_str}</td>
-                    <td>{note_decoded}</td>
-                </tr>'''
-
-            html_content += '''
-                </tbody>
-            </table>
-    '''
-        else:
-            html_content += '<p>No similar plate pairs found based on current analysis.</p>'
-
-        # --- End of Tabs and Container ---
-        html_content += '''
-        </div> <!-- end similar-tab -->
-    </div> <!-- end container -->
-
-    <script>
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    const modalCaption = document.getElementById('modalCaption');
-
-    function openModal(imgElement, captionText) {
-        if (!modal || !modalImg || !modalCaption) return;
-        modal.style.display = "flex"; // Use flex for centering
-        modalImg.src = imgElement.src;
-        modalCaption.innerHTML = captionText;
-    }
-
-    function closeModal() {
-        if (!modal) return;
-        modal.style.display = "none";
-        modalImg.src = ""; // Clear src
-        modalCaption.innerHTML = "";
-    }
-
-    // Close modal if clicked outside the image or on close button
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal ) { // Check if click is on backdrop
-            closeModal();
-        }
-    });
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && modal.style.display === 'flex') {
-            closeModal();
-        }
-    });
-
-    function showTab(tabId, clickedTabElement) {
-        // Hide all tab content
-        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-        // Deactivate all tab buttons
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-
-        // Show the selected tab content
-        const selectedTabContent = document.getElementById(tabId + '-tab');
-        if (selectedTabContent) {
-            selectedTabContent.classList.add('active');
-        }
-        // Activate the clicked tab button
-        if (clickedTabElement) {
-            clickedTabElement.classList.add('active');
-        }
-    }
-
-    // --- Chart Initialization ---
-    try {
-        const ctxDate = document.getElementById('detectionsByDate').getContext('2d');
-        new Chart(ctxDate, {
-            type: 'line',
-            data: {
-                labels: ''' + date_labels + ''', // Use pre-formatted string list
-                datasets: [{
-                    label: 'Detections',
-                    data: ''' + date_values + ''', // Use pre-formatted string list
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Allow chart to resize height
-                plugins: {
-                    title: { display: false }, // Title is in HTML H4
-                    legend: { display: false }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    } catch (e) { console.error("Error creating date chart:", e); }
-
-    try {
-        const ctxStatus = document.getElementById('blacklistBreakdown').getContext('2d');
-        new Chart(ctxStatus, {
-            type: 'pie',
-            data: {
-                labels: ['Blacklisted', 'Tracking', 'Normal'],
-                datasets: [{
-                    data: ''' + pie_data + ''', // Use pre-formatted string list
-                    backgroundColor: ['#dc3545', '#0d6efd', '#28a745'],
-                    borderColor: '#fff',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Allow chart to resize height
-                plugins: {
-                    title: { display: false }, // Title is in HTML H4
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-    } catch (e) { console.error("Error creating status chart:", e); }
-
-    // Ensure the first tab is shown on load (redundant but safe)
-    // showTab('plates', document.querySelector('.tab.active'));
-
-    </script>
-    </body>
-    </html>
-    '''
-
-        try:
-            with open(path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-        except IOError as e:
-            logging.error(f"Failed to write HTML report to {path}: {e}")
-            raise # Re-raise the exception to be caught by the outer handler
-
-
-
-
-
-
-
-
-
-
-
-
+            worker.start()
+        except Exception as error:
+            finish_export(None, error)
+            return
+        self.master.after(50, poll_completion)
 
     def add_selected_to_blacklist(self):
         """

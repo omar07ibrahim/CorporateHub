@@ -747,26 +747,78 @@ def browser_policy_errors(
         errors.append("report_panel.py: expected one export_report")
     else:
         export_function = export_functions[0]
-        export_path = _single_assignment_value(export_function, "path")
+        output_parent = _single_assignment_value(export_function, "output_parent")
         if not (
-            isinstance(export_path, ast.Call)
-            and isinstance(export_path.func, ast.Attribute)
-            and isinstance(export_path.func.value, ast.Name)
-            and export_path.func.value.id == "filedialog"
-            and export_path.func.attr == "asksaveasfilename"
+            isinstance(output_parent, ast.Call)
+            and isinstance(output_parent.func, ast.Attribute)
+            and isinstance(output_parent.func.value, ast.Name)
+            and output_parent.func.value.id == "filedialog"
+            and output_parent.func.attr == "askdirectory"
         ):
-            errors.append("export_report: path must come from save dialog")
+            errors.append("export_report: parent must come from directory dialog")
+        if not _matches_expression(
+            _single_assignment_value(export_function, "export_result"),
+            "export_offline_report(self.db.path, output_parent)",
+        ):
+            errors.append("export_report: offline exporter dataflow changed")
+        if len(_calls_named(export_function, "export_offline_report")) != 1:
+            errors.append("export_report: expected exactly one offline export call")
+        worker_functions = [
+            node
+            for node in export_function.body
+            if isinstance(node, ast.FunctionDef) and node.name == "run_export"
+        ]
+        if len(worker_functions) != 1:
+            errors.append("export_report: expected one background export worker")
+        elif len(_calls_named(worker_functions[0], "export_offline_report")) != 1:
+            errors.append("export_report: offline export must run only in its worker")
+        if not _matches_expression(
+            _single_assignment_value(export_function, "worker"),
+            (
+                "threading.Thread(target=run_export, "
+                "name='CorporateHub-report-export', daemon=True)"
+            ),
+        ):
+            errors.append("export_report: background thread contract changed")
+        thread_start_calls = [
+            node
+            for node in ast.walk(export_function)
+            if isinstance(node, ast.Call)
+            and _matches_expression(node, "worker.start()")
+        ]
+        after_calls = [
+            node
+            for node in ast.walk(export_function)
+            if isinstance(node, ast.Call)
+            and _matches_expression(node, "self.master.after(50, poll_completion)")
+        ]
+        if len(thread_start_calls) != 1 or len(after_calls) != 2:
+            errors.append("export_report: worker polling contract changed")
         export_browser_calls = _browser_open_calls(export_function)
         if (
             len(export_browser_calls) != 1
             or not _matches_expression(
                 export_browser_calls[0],
-                "webbrowser.open(local_file_uri(path))",
+                "webbrowser.open(local_file_uri(export_result.index_path))",
             )
         ):
             errors.append("export_report: browser URI dataflow changed")
         if len(_calls_named(export_function, "local_file_uri")) != 1:
             errors.append("export_report: URI encoder must be nested exactly once")
+        forbidden_export_calls = {
+            "analyze_similar_plates",
+            "export_html",
+            "get_all_plates",
+        }
+        if any(
+            isinstance(node, ast.Attribute)
+            and node.attr in forbidden_export_calls
+            for node in ast.walk(export_function)
+        ):
+            errors.append("export_report: legacy mutable export path is reachable")
+
+    if report_functions.get("export_html"):
+        errors.append("report_panel.py: legacy export_html surface remains")
 
     if len(_browser_open_calls(progress_tree)) != 1:
         errors.append("progress_frame.py: unexpected browser-open site count")
@@ -882,7 +934,19 @@ class PublicBaselineTests(unittest.TestCase):
             "docs/assets/rtsp-quarantine-matrix.svg",
             "not a complete filesystem sandbox",
             "Existing artifacts whose names were derived by older code are not renamed or migrated",
-            "The HTML generator and its image-copy behavior have not been rewritten",
+            "Source-verified redacted offline reports",
+            "Version one has one privacy mode: `redacted-v1`.",
+            "Stored `plate_detections` rows are labelled observation records",
+            "Redaction reduces exposure but does not guarantee anonymity",
+            "requires Python 3.11+",
+            "lowers `SQLITE_LIMIT_LENGTH`",
+            "Confidence aggregation uses `math.fsum`",
+            "regenerates both HTML and SVG byte-for-byte",
+            "bounds manifest nesting and structural tokens",
+            "The manifest is content-addressed, not signed.",
+            "it does not establish who created it",
+            "python3 report_export.py export",
+            "content-addressed directory",
             "The generated suffix namespace is reserved",
             (
                 "Raw recognition text remains in legacy database, UI, "
@@ -892,9 +956,12 @@ class PublicBaselineTests(unittest.TestCase):
             "Logging redaction is a later rehabilitation stage.",
             (
                 "imports the project-owned `path_policy`, `rtsp_policy`, "
-                "and `rtsp_evidence` modules"
+                "`rtsp_evidence`, and `report_export` modules"
             ),
-            "does not import the GUI, database, vendor wrappers, or native runtime",
+            (
+                "does not import the GUI, mutable database wrapper, vendor "
+                "wrappers, or native runtime"
+            ),
             "python3 -m unittest discover -s tests -v",
         }
         for statement in required_statements:
@@ -927,10 +994,17 @@ class PublicBaselineTests(unittest.TestCase):
             ),
             "Logging redaction is a later rehabilitation stage.",
             "No legacy artifact migration is included.",
-            (
-                "the HTML report generator and image-copy logic are unchanged "
-                "and have not been runtime-tested"
-            ),
+            "Redacted offline-report boundary",
+            "SQLite URI `mode=ro`",
+            "Version-one bundles are always `redacted-v1`",
+            "It copies no source images",
+            "Redacted aggregates can still enable re-identification",
+            "fails closed unless the runtime exposes `SQLITE_LIMIT_LENGTH`",
+            "`math.fsum` aggregation keeps equal confidence multisets deterministic",
+            "both HTML and SVG must equal a byte-exact regeneration",
+            "pre-parse complexity scan bounds JSON structure",
+            "do not prove authorship, source-database provenance, or truth",
+            "same-user adversary can race parent-directory changes",
             "This boundary is RTSP-specific, not a general URI or network sandbox.",
             "Python tracebacks retain frame locals",
             "never substitute a real camera URL",
@@ -955,6 +1029,11 @@ class PublicBaselineTests(unittest.TestCase):
             ("video_processor.py", "path_policy", "Processor --> PathPolicy"),
             ("progress_frame.py", "path_policy", "Progress --> PathPolicy"),
             ("report_panel.py", "path_policy", "Reports --> PathPolicy"),
+            (
+                "report_panel.py",
+                "report_export",
+                'Reports --> ReportExport["report_export.py',
+            ),
             ("video_processor.py", "PIL", "Processor -. imports .-> Pillow"),
             ("video_processor.py", "cv2", "Processor -. imports .-> OpenCV"),
             ("video_processor.py", "Levenshtein", "Processor -. imports .-> Levenshtein"),
@@ -1019,6 +1098,29 @@ class PublicBaselineTests(unittest.TestCase):
                 "typing",
             },
             imported_roots("rtsp_evidence.py"),
+        )
+        self.assertEqual(
+            {
+                "__future__",
+                "argparse",
+                "dataclasses",
+                "errno",
+                "hashlib",
+                "html",
+                "json",
+                "math",
+                "os",
+                "pathlib",
+                "re",
+                "shutil",
+                "sqlite3",
+                "stat",
+                "sys",
+                "tempfile",
+                "typing",
+                "xml",
+            },
+            imported_roots("report_export.py"),
         )
 
     def test_video_write_policy_rejects_dead_calls_and_broken_dataflow(self) -> None:
@@ -1126,9 +1228,42 @@ class PublicBaselineTests(unittest.TestCase):
             "export dead URI encoder": (
                 progress_source,
                 report_source.replace(
-                    "webbrowser.open(local_file_uri(path))",
-                    "webbrowser.open(str(path))\n"
-                    "                         local_file_uri(path)",
+                    "webbrowser.open(local_file_uri(export_result.index_path))",
+                    "webbrowser.open(str(export_result.index_path))\n"
+                    "                    local_file_uri(export_result.index_path)",
+                    1,
+                ),
+            ),
+            "export bypasses immutable boundary": (
+                progress_source,
+                report_source.replace(
+                    "export_result = export_offline_report(self.db.path, output_parent)",
+                    "export_result = self.export_html("
+                    "output_parent, self.db.get_all_plates())",
+                    1,
+                ),
+            ),
+            "export opens selected parent": (
+                progress_source,
+                report_source.replace(
+                    "webbrowser.open(local_file_uri(export_result.index_path))",
+                    "webbrowser.open(local_file_uri(output_parent))",
+                    1,
+                ),
+            ),
+            "export worker runs synchronously": (
+                progress_source,
+                report_source.replace(
+                    "target=run_export,",
+                    "target=finish_export,",
+                    1,
+                ),
+            ),
+            "export worker blocks process exit": (
+                progress_source,
+                report_source.replace(
+                    "            daemon=True,",
+                    "            daemon=False,",
                     1,
                 ),
             ),
