@@ -868,8 +868,12 @@ class PublicBaselineTests(unittest.TestCase):
             "does not currently grant an open-source license",
             "The application has not been executed in this stage",
             "There is no dependency manifest or lock file",
-            "Known RTSP breakage",
+            "Source-verified RTSP quarantine",
+            "The GUI does not solicit an endpoint",
             "Do not treat RTSP as a working feature.",
+            "Python tracebacks retain frame locals",
+            "RTSP-specific, not a general URI or network sandbox",
+            "No camera stream was opened",
             "not a complete filesystem sandbox",
             "Existing artifacts whose names were derived by older code are not renamed or migrated",
             "The HTML generator and its image-copy behavior have not been rewritten",
@@ -880,7 +884,10 @@ class PublicBaselineTests(unittest.TestCase):
                 "filenames use derived components."
             ),
             "Logging redaction is a later rehabilitation stage.",
-            "imports the isolated standard-library-only `path_policy` module",
+            (
+                "imports the isolated standard-library-only `path_policy` "
+                "and `rtsp_policy` modules"
+            ),
             "does not import the GUI, database, vendor wrappers, or native runtime",
             "python3 -m unittest discover -s tests -v",
         }
@@ -918,6 +925,8 @@ class PublicBaselineTests(unittest.TestCase):
                 "the HTML report generator and image-copy logic are unchanged "
                 "and have not been runtime-tested"
             ),
+            "This boundary is RTSP-specific, not a general URI or network sandbox.",
+            "Python tracebacks retain frame locals",
         }
         for statement in required_statements:
             with self.subTest(statement=statement):
@@ -928,8 +937,10 @@ class PublicBaselineTests(unittest.TestCase):
         bindings = (
             ("main.py", "database", "GUI --> DB"),
             ("main.py", "processing_manager", 'GUI --> Manager["VideoProcessingManager'),
+            ("main.py", "rtsp_policy", "GUI --> RTSPPolicy"),
             ("processing_manager.py", "database", "Manager --> DB"),
             ("processing_manager.py", "video_processor", 'Manager --> Processor["VideoProcessor'),
+            ("processing_manager.py", "rtsp_policy", "Manager --> RTSPPolicy"),
             ("video_processor.py", "DTKLPR5", "Processor --> LPRWrapper"),
             ("video_processor.py", "DTKVID", "Processor --> VIDWrapper"),
             ("video_processor.py", "database", "Processor --> DB"),
@@ -972,6 +983,16 @@ class PublicBaselineTests(unittest.TestCase):
                 "unicodedata",
             },
             imported_roots("path_policy.py"),
+        )
+        self.assertEqual(
+            {
+                "__future__",
+                "dataclasses",
+                "ipaddress",
+                "re",
+                "urllib",
+            },
+            imported_roots("rtsp_policy.py"),
         )
 
     def test_video_write_policy_rejects_dead_calls_and_broken_dataflow(self) -> None:

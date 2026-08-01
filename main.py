@@ -5,11 +5,11 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import logging
 import threading
-import datetime
 
 from database import DB
 from processing_manager import VideoProcessingManager
 from report_panel import ReportPanel
+from rtsp_policy import RTSP_UNAVAILABLE_MESSAGE
 from settings_dialog import SettingsDialog
 from progress_frame import ProgressFrame
 from utils import extract_timestamp_from_filename
@@ -147,38 +147,18 @@ class MainApp:
             input_dialog.destroy()
             
         def select_rtsp():
-            """
-            Окно для ввода RTSP-ссылки.
-            """
-            rtsp_dialog = tk.Toplevel(input_dialog)
-            rtsp_dialog.title("Enter RTSP URL")
-            rtsp_dialog.geometry("400x150")
-            rtsp_dialog.transient(input_dialog)
-            rtsp_dialog.grab_set()
-            
-            ttk.Label(rtsp_dialog, text="Enter RTSP URL:").pack(pady=10)
-            
-            rtsp_var = tk.StringVar(value="rtsp://")
-            rtsp_entry = ttk.Entry(rtsp_dialog, textvariable=rtsp_var, width=50)
-            rtsp_entry.pack(padx=10, pady=5)
-            
-            def on_rtsp_submit():
-                rtsp_url = rtsp_var.get()
-                if rtsp_url and rtsp_url.startswith("rtsp://"):
-                    self.progress_frame.clear_videos()
-                    self.process_rtsp(rtsp_url)
-                    self.status_var.set(f"Processing RTSP stream: {rtsp_url}")
-                    rtsp_dialog.destroy()
-                    input_dialog.destroy()
-                else:
-                    messagebox.showwarning("Invalid URL", "Please enter a valid RTSP URL starting with 'rtsp://'")
-            
-            ttk.Button(rtsp_dialog, text="Start Processing", command=on_rtsp_submit).pack(pady=10)
+            """Explain the fail-closed live-camera boundary without soliciting a URL."""
+            self.status_var.set(RTSP_UNAVAILABLE_MESSAGE)
+            messagebox.showwarning("RTSP unavailable", RTSP_UNAVAILABLE_MESSAGE)
 
         ttk.Label(input_dialog, text="Select input source:", padding=10).pack()
         ttk.Button(input_dialog, text="Select Folder", command=select_folder).pack(pady=10, padx=20, fill=tk.X)
         ttk.Button(input_dialog, text="Select Files", command=select_files).pack(pady=10, padx=20, fill=tk.X)
-        ttk.Button(input_dialog, text="RTSP Stream", command=select_rtsp).pack(pady=10, padx=20, fill=tk.X)
+        ttk.Button(
+            input_dialog,
+            text="RTSP Stream (Unavailable)",
+            command=select_rtsp,
+        ).pack(pady=10, padx=20, fill=tk.X)
 
     def process_videos(self, input_paths):
         """
@@ -202,22 +182,6 @@ class MainApp:
         processing_thread = threading.Thread(target=self._process_videos_wrapper, daemon=True)
         processing_thread.start()
         
-    def process_rtsp(self, rtsp_url):
-        """
-        Создает VideoProcessingManager и добавляет RTSP-поток в очередь.
-        """
-        self.processing_manager = VideoProcessingManager(self.profile, self.progress_frame)
-        
-        # Генерируем имя для RTSP-потока (используем текущую дату/время)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        stream_name = f"rtsp_stream_{timestamp}"
-        
-        self.processing_manager.add_rtsp_stream(rtsp_url, stream_name)
-        
-        # Запуск в отдельном потоке
-        processing_thread = threading.Thread(target=self._process_videos_wrapper, daemon=True)
-        processing_thread.start()
-
     def _process_videos_wrapper(self):
         """
         Запуск пакетной обработки в отдельном потоке.

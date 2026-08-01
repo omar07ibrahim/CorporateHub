@@ -24,6 +24,23 @@ at the operating-system boundary. Do not include credentials in RTSP URLs used
 for development evidence. Review images and reports for personal data before
 sharing them.
 
+## RTSP quarantine and diagnostic limits
+
+The current GUI does not solicit or retain an RTSP endpoint and does not start a
+camera. Direct RTSP manager calls return a fixed unavailable error before
+endpoint-dependent work. The legacy video-file entry also rejects `rtsp:` and
+`rtsps:` prefixes before queue mutation or OpenCV. A standard-library parser is
+available only as a credential-free policy boundary; it rejects userinfo,
+queries, fragments, controls, ambiguous paths, and malformed hosts or ports,
+then discards the endpoint.
+
+This boundary is RTSP-specific, not a general URI or network sandbox. Exception
+messages and allowlisted metadata omit the input, but Python tracebacks retain
+frame locals and can therefore retain a rejected endpoint. Do not log, persist,
+attach, or publish those tracebacks if a caller supplies sensitive input. No
+camera, DTK live-capture method, timeout, lifecycle, backpressure, or native
+cleanup behavior was validated by the source-only tests.
+
 ## Bounded path-policy coverage
 
 New files created by the four plate-derived image-write sites use a bounded

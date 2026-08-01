@@ -32,7 +32,10 @@ flowchart LR
     GUI --> Settings["SettingsDialog"]
     GUI --> Reports["ReportPanel"]
     GUI --> Manager["VideoProcessingManager<br/>queues + worker threads"]
+    GUI --> RTSPPolicy["rtsp_policy.py<br/>credential-free admission + quarantine"]
     Manager --> DB
+    Manager --> RTSPPolicy
+    RTSPPolicy --> Quarantine["Fixed unavailable decision<br/>no camera capture"]
 
     Manager --> Processor["VideoProcessor"]
     Processor --> LPRWrapper["DTKLPR5.py<br/>ctypes wrapper"]
@@ -133,28 +136,46 @@ by older code are not renamed or migrated; folder actions target the new
 component policy, so a legacy artifact may need manual, privacy-reviewed
 handling.
 
-## Known RTSP breakage
+## Source-verified RTSP quarantine
 
-RTSP controls are visible in the source, but the path is currently broken and
-unverified:
+Live-camera capture remains unavailable, but the former broken path is now
+fail-closed. The GUI does not solicit an endpoint: its RTSP control shows one
+fixed unavailable explanation. `VideoProcessingManager.add_rtsp_stream()`
+discards its arguments and raises a fixed error before any endpoint-dependent
+queue, progress, OpenCV, database-write, processor, or DTK operation. The
+ordinary video-file entry point also rejects `rtsp:` and `rtsps:` transport
+prefixes, including case variants and leading ASCII controls, before queueing
+or opening them.
 
-- `VideoProcessingManager` constructs `VideoProcessor` with `is_rtsp` and
-  `stream_id` keyword arguments that its constructor does not accept.
-- `VideoProcessor.start_processing()` calls the wrapper's file-capture method,
-  not its IP-camera capture method.
+The isolated standard-library-only `rtsp_policy` module validates a deliberately
+narrow, credential-free `rtsp://host[:port]/path` shape. It rejects userinfo,
+queries, fragments, controls, non-ASCII input, invalid ports and hosts, and
+ambiguous paths, then discards the input and exposes only fixed public metadata.
+`RtspSource` cannot be constructed through its public constructor. This parser
+is a policy boundary for later work, not a camera client, and the GUI does not
+currently pass an endpoint to it.
 
-Do not treat RTSP as a working feature. No camera stream was opened during this
-baseline.
+Exception messages and serialized public metadata do not embed the input.
+Python tracebacks retain frame locals, however, so a caught policy traceback can
+still retain its endpoint; do not persist or publish such tracebacks. The
+file-entry guard is RTSP-specific, not a general URI or network sandbox. Other
+network-shaped strings have not yet received an equivalent source boundary.
+
+Do not treat RTSP as a working feature. No camera stream was opened, no native
+RTSP call was made, and no live-camera lifecycle was runtime-validated in this
+increment.
 
 ## Data and operational risks
 
 The prototype can write license-plate text, timestamps, source filenames,
 blacklist information, SQLite data, and cropped/full-frame images to the local
-working tree. RTSP URLs may also contain credentials and are placed in UI state
-by the current code. Apart from the bounded path-policy increment above, the
-source does not implement encryption, authentication, authorization, retention
-enforcement, redaction, a complete filesystem sandbox, or a tested deletion
-workflow. Logs and exported reports can add further copies.
+working tree. RTSP URLs can contain credentials, but the current GUI no longer
+solicits them and the narrow parser rejects credential-bearing forms. Traceback
+locals remain a sensitive diagnostic surface. Apart from the bounded path and
+RTSP increments above, the source does not implement encryption,
+authentication, authorization, retention enforcement, redaction, a complete
+filesystem sandbox, or a tested deletion workflow. Logs and exported reports
+can add further copies.
 
 Use synthetic or explicitly authorized data only. Keep runtime databases,
 camera media, images, logs, reports, exports, native binaries, and environment
@@ -167,8 +188,8 @@ globally ignored. See [SECURITY.md](SECURITY.md) before handling any real data.
 
 The source-only verification suite has only Python standard-library
 dependencies, invokes the Git CLI to enumerate commit candidates, and imports
-the isolated standard-library-only `path_policy` module. It does not import the
-GUI, database, vendor wrappers, or native runtime:
+the isolated standard-library-only `path_policy` and `rtsp_policy` modules. It
+does not import the GUI, database, vendor wrappers, or native runtime:
 
 ```text
 python3 -m unittest discover -s tests -v
@@ -179,7 +200,10 @@ bind vendor notices to exact wrapper hashes, inspect ignore coverage and
 tracked runtime artifacts, exercise the isolated path policy (including
 traversal, Unicode, length, digest, symlink, and URI cases), bind its call sites
 through AST inspection, and scan repository text for high-confidence secret
-signatures. They do not validate GUI behavior, DTK licensing, recognition
+signatures. The RTSP checks exercise endpoint classification and fixed public
+metadata, bind both GUI and manager denial paths through AST inspection, and
+include mutations for raw display, dead runtime calls, late guards, and queue
+bypasses. They do not validate GUI behavior, DTK licensing, recognition
 quality, native-library loading, video processing, database concurrency,
 filesystem race resistance, HTML safety, or RTSP operation.
 
