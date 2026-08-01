@@ -41,6 +41,16 @@ attach, or publish those tracebacks if a caller supplies sensitive input. No
 camera, DTK live-capture method, timeout, lifecycle, backpressure, or native
 cleanup behavior was validated by the source-only tests.
 
+Public RTSP evidence must be generated only through `rtsp_evidence.py`; never
+substitute a real camera URL or operational hostname into a tracked artifact.
+The generator records input classes and stable decision codes, not fixture
+values, and refuses to write when a policy case or source binding fails. Its
+tracked JSON and SVG outputs are deterministic source evidence. They do not
+provide credential storage, secure memory erasure, traceback redaction,
+legacy-log cleanup, network isolation, TLS validation, interoperability,
+reconnect behavior, timeouts, backpressure, GUI-thread handoff, performance, or
+a supported camera feature.
+
 ## Bounded path-policy coverage
 
 New files created by the four plate-derived image-write sites use a bounded

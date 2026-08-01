@@ -218,10 +218,10 @@ def reject_rtsp_transport(video_path: str) -> None:
     if type(video_path) is not str:
         raise TypeError("video paths must be text")
     prefix_start = 0
-    while (
-        prefix_start < len(video_path)
-        and ord(video_path[prefix_start]) <= 32
-    ):
+    while prefix_start < len(video_path):
+        character_code = ord(video_path[prefix_start])
+        if character_code > 32 and character_code != 127:
+            break
         prefix_start += 1
     transport_prefix = video_path[prefix_start : prefix_start + 6].casefold()
     if transport_prefix.startswith("rtsp:") or transport_prefix == "rtsps:":

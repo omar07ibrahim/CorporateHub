@@ -1,7 +1,7 @@
 """Source-only checks that avoid GUI, database, vendor, and native imports.
 
-The isolated standard-library-only :mod:`path_policy` module is imported by its
-focused unit test; this module itself inspects project source as text and AST.
+Focused tests import the project-owned policy and evidence modules; this module
+itself inspects the remaining project source as text and AST.
 """
 
 from __future__ import annotations
@@ -874,6 +874,12 @@ class PublicBaselineTests(unittest.TestCase):
             "Python tracebacks retain frame locals",
             "RTSP-specific, not a general URI or network sandbox",
             "No camera stream was opened",
+            "source-only evidence, not camera runtime evidence",
+            "python3 rtsp_evidence.py --check",
+            "evidence/rtsp-quarantine-v1.json",
+            "docs/assets/rtsp-quarantine-cli.svg",
+            "docs/assets/rtsp-quarantine-flow.svg",
+            "docs/assets/rtsp-quarantine-matrix.svg",
             "not a complete filesystem sandbox",
             "Existing artifacts whose names were derived by older code are not renamed or migrated",
             "The HTML generator and its image-copy behavior have not been rewritten",
@@ -885,8 +891,8 @@ class PublicBaselineTests(unittest.TestCase):
             ),
             "Logging redaction is a later rehabilitation stage.",
             (
-                "imports the isolated standard-library-only `path_policy` "
-                "and `rtsp_policy` modules"
+                "imports the project-owned `path_policy`, `rtsp_policy`, "
+                "and `rtsp_evidence` modules"
             ),
             "does not import the GUI, database, vendor wrappers, or native runtime",
             "python3 -m unittest discover -s tests -v",
@@ -927,6 +933,8 @@ class PublicBaselineTests(unittest.TestCase):
             ),
             "This boundary is RTSP-specific, not a general URI or network sandbox.",
             "Python tracebacks retain frame locals",
+            "never substitute a real camera URL",
+            "secure memory erasure",
         }
         for statement in required_statements:
             with self.subTest(statement=statement):
@@ -993,6 +1001,24 @@ class PublicBaselineTests(unittest.TestCase):
                 "urllib",
             },
             imported_roots("rtsp_policy.py"),
+        )
+        self.assertEqual(
+            {
+                "__future__",
+                "argparse",
+                "ast",
+                "hashlib",
+                "html",
+                "json",
+                "os",
+                "pathlib",
+                "re",
+                "rtsp_policy",
+                "sys",
+                "tempfile",
+                "typing",
+            },
+            imported_roots("rtsp_evidence.py"),
         )
 
     def test_video_write_policy_rejects_dead_calls_and_broken_dataflow(self) -> None:

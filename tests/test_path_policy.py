@@ -15,6 +15,8 @@ from path_policy import (
     safe_path_component,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 class SafePathComponentTests(unittest.TestCase):
     def test_common_ascii_plate_components_are_unchanged(self) -> None:
@@ -121,7 +123,7 @@ class SafePathComponentTests(unittest.TestCase):
 
 class ManagedPathTests(unittest.TestCase):
     def test_managed_paths_are_absolute_and_contained(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary_directory:
             project_root = Path(temporary_directory)
             result = managed_path(
                 "detection_history",
@@ -138,7 +140,7 @@ class ManagedPathTests(unittest.TestCase):
             )
 
     def test_unmanaged_and_traversal_paths_are_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary_directory:
             project_root = Path(temporary_directory)
             invalid_requests = (
                 ("exports", ("report.html",)),
@@ -157,8 +159,8 @@ class ManagedPathTests(unittest.TestCase):
                         )
 
     def test_existing_symlink_escape_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as project_directory:
-            with tempfile.TemporaryDirectory() as outside_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as project_directory:
+            with tempfile.TemporaryDirectory(dir=ROOT) as outside_directory:
                 project_root = Path(project_directory)
                 images = project_root / "images"
                 images.mkdir()
@@ -179,8 +181,8 @@ class ManagedPathTests(unittest.TestCase):
                     )
 
     def test_managed_root_symlink_escape_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as project_directory:
-            with tempfile.TemporaryDirectory() as outside_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as project_directory:
+            with tempfile.TemporaryDirectory(dir=ROOT) as outside_directory:
                 project_root = Path(project_directory)
                 try:
                     (project_root / "images").symlink_to(
@@ -198,8 +200,8 @@ class ManagedPathTests(unittest.TestCase):
                     )
 
     def test_existing_leaf_file_symlink_escape_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as project_directory:
-            with tempfile.TemporaryDirectory() as outside_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as project_directory:
+            with tempfile.TemporaryDirectory(dir=ROOT) as outside_directory:
                 project_root = Path(project_directory)
                 images = project_root / "images"
                 images.mkdir()
@@ -220,7 +222,7 @@ class ManagedPathTests(unittest.TestCase):
 
 class LocalFileUriTests(unittest.TestCase):
     def test_uri_percent_encodes_spaces_quotes_hash_and_unicode(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary_directory:
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary_directory:
             path = Path(temporary_directory) / """report '"Q3" # Å;$(x).html"""
             uri = local_file_uri(path)
             parsed = urlsplit(uri)

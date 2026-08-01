@@ -165,6 +165,45 @@ Do not treat RTSP as a working feature. No camera stream was opened, no native
 RTSP call was made, and no live-camera lifecycle was runtime-validated in this
 increment.
 
+### Reproduce the quarantine evidence
+
+The following artifacts are source-only evidence, not camera runtime evidence.
+`rtsp_evidence.py` executes ten policy cases, checks the three entry points as
+AST, hashes the four evidence-bearing sources, and renders every artifact from
+that single result. It never imports the GUI, OpenCV, database, vendor wrappers,
+or native runtime. The tracked outputs contain no endpoint values, host state,
+timestamps, absolute paths, or commit identifiers.
+
+```text
+python3 rtsp_evidence.py
+python3 rtsp_evidence.py --check
+python3 rtsp_evidence.py --write
+```
+
+`--check` byte-compares all tracked outputs. `--write` refuses to publish if a
+policy case or source binding fails, then replaces each artifact atomically.
+The canonical receipt is available as
+[`evidence/rtsp-quarantine-v1.json`](evidence/rtsp-quarantine-v1.json).
+
+[![Exact CorporateHub RTSP quarantine CLI receipt](docs/assets/rtsp-quarantine-cli.svg)](docs/assets/rtsp-quarantine-cli.svg)
+
+The terminal visual above is generated line-for-line from the same receipt that
+the CLI prints. It reports the executed case and source-binding totals, not a
+simulated application session.
+
+[![Source-bound RTSP quarantine flow](docs/assets/rtsp-quarantine-flow.svg)](docs/assets/rtsp-quarantine-flow.svg)
+
+The flow visual names all three verified GUI/manager surfaces and their distinct
+fixed-denial behavior. Syntax admission is shown separately because the GUI is
+not wired to that future-facing policy path.
+
+[![Observed RTSP policy result matrix](docs/assets/rtsp-quarantine-matrix.svg)](docs/assets/rtsp-quarantine-matrix.svg)
+
+The matrix is rendered from the ten observed results. `MATCH` means the expected
+policy outcome was observed; capture remains denied. Inputs appear only as
+non-sensitive classes, while the JSON carries stable outcome codes and full
+source hashes without storing the tested endpoint values.
+
 ## Data and operational risks
 
 The prototype can write license-plate text, timestamps, source filenames,
@@ -188,8 +227,9 @@ globally ignored. See [SECURITY.md](SECURITY.md) before handling any real data.
 
 The source-only verification suite has only Python standard-library
 dependencies, invokes the Git CLI to enumerate commit candidates, and imports
-the isolated standard-library-only `path_policy` and `rtsp_policy` modules. It
-does not import the GUI, database, vendor wrappers, or native runtime:
+the project-owned `path_policy`, `rtsp_policy`, and `rtsp_evidence` modules. That
+source-only set does not import the GUI, database, vendor wrappers, or native
+runtime:
 
 ```text
 python3 -m unittest discover -s tests -v
@@ -203,9 +243,11 @@ through AST inspection, and scan repository text for high-confidence secret
 signatures. The RTSP checks exercise endpoint classification and fixed public
 metadata, bind both GUI and manager denial paths through AST inspection, and
 include mutations for raw display, dead runtime calls, late guards, and queue
-bypasses. They do not validate GUI behavior, DTK licensing, recognition
-quality, native-library loading, video processing, database concurrency,
-filesystem race resistance, HTML safety, or RTSP operation.
+bypasses. Evidence checks also require the JSON and three accessible SVGs to be
+deterministic, current, endpoint-free, locally linked, and sensitive to source
+or artifact mutations. They do not validate GUI behavior, DTK licensing,
+recognition quality, native-library loading, video processing, database
+concurrency, filesystem race resistance, HTML safety, or RTSP operation.
 
 ## Repository status
 

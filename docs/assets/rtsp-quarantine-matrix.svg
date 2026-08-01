@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="850" viewBox="0 0 1440 850" role="img" aria-labelledby="matrix-title matrix-desc">
+  <title id="matrix-title">CorporateHub observed RTSP policy matrix</title>
+  <desc id="matrix-desc">Ten executed policy cases list input class, boundary, observed state, stable decision code, and expected-outcome match without serializing any endpoint value; capture remains denied.</desc>
+  <rect width="1440" height="850" rx="28" fill="#07111f"/>
+  <text x="56" y="70" fill="#f8fafc" font-size="34" font-weight="700" font-family="Arial,sans-serif">Observed RTSP policy matrix</text>
+  <text x="56" y="104" fill="#94a3b8" font-size="18" font-family="Arial,sans-serif">Actual source-only results; inputs are classified but never serialized</text>
+  <text x="56" y="132" fill="#fda4af" font-size="15" font-weight="700" font-family="Arial,sans-serif">MATCH = expected policy outcome observed · capture remains DENIED</text>
+  <rect x="1080" y="50" width="304" height="44" rx="22" fill="#123d36"/>
+  <text x="1232" y="78" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" font-family="Arial,sans-serif">10/10 POLICY OUTCOMES MATCH</text>
+  <text x="78" y="154" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">INPUT CLASS</text>
+  <text x="440" y="154" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">BOUNDARY</text>
+  <text x="700" y="154" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">OBSERVED STATE</text>
+  <text x="985" y="154" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">STABLE CODE</text>
+  <text x="1328" y="154" text-anchor="end" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">EVIDENCE</text>
+  <rect x="56" y="171" width="1328" height="50" rx="10" fill="#0f1d31"/>
+  <text x="78" y="205" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">credential-free hostname</text>
+  <text x="440" y="205" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="205" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">admitted</text>
+  <text x="985" y="205" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-unavailable</text>
+  <text x="1328" y="205" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="225" width="1328" height="50" rx="10" fill="#0b1728"/>
+  <text x="78" y="259" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">documentation IPv4</text>
+  <text x="440" y="259" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="259" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">admitted</text>
+  <text x="985" y="259" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-unavailable</text>
+  <text x="1328" y="259" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="279" width="1328" height="50" rx="10" fill="#0f1d31"/>
+  <text x="78" y="313" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">documentation IPv6</text>
+  <text x="440" y="313" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="313" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">admitted</text>
+  <text x="985" y="313" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-unavailable</text>
+  <text x="1328" y="313" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="333" width="1328" height="50" rx="10" fill="#0b1728"/>
+  <text x="78" y="367" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">credential-bearing userinfo</text>
+  <text x="440" y="367" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="367" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rejected</text>
+  <text x="985" y="367" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-credentials-forbidden</text>
+  <text x="1328" y="367" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="387" width="1328" height="50" rx="10" fill="#0f1d31"/>
+  <text x="78" y="421" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">query-bearing endpoint</text>
+  <text x="440" y="421" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="421" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rejected</text>
+  <text x="985" y="421" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-query-forbidden</text>
+  <text x="1328" y="421" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="441" width="1328" height="50" rx="10" fill="#0b1728"/>
+  <text x="78" y="475" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">fragment-bearing endpoint</text>
+  <text x="440" y="475" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="475" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rejected</text>
+  <text x="985" y="475" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-fragment-forbidden</text>
+  <text x="1328" y="475" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="495" width="1328" height="50" rx="10" fill="#0f1d31"/>
+  <text x="78" y="529" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">parent path segment</text>
+  <text x="440" y="529" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="529" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rejected</text>
+  <text x="985" y="529" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-path-ambiguous</text>
+  <text x="1328" y="529" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="549" width="1328" height="50" rx="10" fill="#0b1728"/>
+  <text x="78" y="583" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">encoded path separator</text>
+  <text x="440" y="583" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">syntax admission</text>
+  <text x="700" y="583" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rejected</text>
+  <text x="985" y="583" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-path-ambiguous</text>
+  <text x="1328" y="583" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="603" width="1328" height="50" rx="10" fill="#0f1d31"/>
+  <text x="78" y="637" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">RTSP transport at file ingress</text>
+  <text x="440" y="637" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">local-video ingress</text>
+  <text x="700" y="637" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">blocked-before-file</text>
+  <text x="985" y="637" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-unavailable</text>
+  <text x="1328" y="637" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="657" width="1328" height="50" rx="10" fill="#0b1728"/>
+  <text x="78" y="691" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif">admitted credential-free source</text>
+  <text x="440" y="691" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">runtime availability</text>
+  <text x="700" y="691" fill="#cbd5e1" font-size="17" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">admitted-then-denied</text>
+  <text x="985" y="691" fill="#93c5fd" font-size="15" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">rtsp-unavailable</text>
+  <text x="1328" y="691" text-anchor="end" fill="#6ee7b7" font-size="16" font-weight="700" font-family="Arial,sans-serif">MATCH</text>
+  <rect x="56" y="760" width="1328" height="54" rx="12" fill="#0b1728" stroke="#24324a"/>
+  <text x="78" y="793" fill="#94a3b8" font-size="14" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">main.py 17e62d6d6015 · processing_manager.py 1aa59970bc84 · rtsp_evidence.py 005745efde1c · rtsp_policy.py 8905c6b25feb</text>
+</svg>

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import ast
 from dataclasses import asdict
 from pathlib import Path
 import unittest
 
+from rtsp_evidence import rtsp_quarantine_errors
 from rtsp_policy import (
     MAX_RTSP_ENDPOINT_BYTES,
     RTSP_INVALID_MESSAGE,
@@ -23,140 +23,6 @@ from rtsp_policy import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _is_expression(node: ast.AST, expression: str) -> bool:
-    expected = ast.parse(expression, mode="eval").body
-    return ast.dump(node, include_attributes=False) == ast.dump(
-        expected,
-        include_attributes=False,
-    )
-
-
-def rtsp_quarantine_errors(main_source: str, manager_source: str) -> tuple[str, ...]:
-    """Return static violations in the two legacy RTSP entry surfaces."""
-
-    main_tree = ast.parse(main_source, filename="main.py")
-    manager_tree = ast.parse(manager_source, filename="processing_manager.py")
-    errors: list[str] = []
-
-    main_functions = [
-        node for node in ast.walk(main_tree) if isinstance(node, ast.FunctionDef)
-    ]
-    select_functions = [
-        node for node in main_functions if node.name == "select_rtsp"
-    ]
-    if len(select_functions) != 1:
-        errors.append("main.py must contain exactly one select_rtsp callback")
-    else:
-        select_function = select_functions[0]
-        calls = [node for node in ast.walk(select_function) if isinstance(node, ast.Call)]
-        status_calls = [
-            call
-            for call in calls
-            if _is_expression(
-                call,
-                "self.status_var.set(RTSP_UNAVAILABLE_MESSAGE)",
-            )
-        ]
-        warning_calls = [
-            call
-            for call in calls
-            if _is_expression(
-                call,
-                (
-                    "messagebox.showwarning("
-                    "'RTSP unavailable', RTSP_UNAVAILABLE_MESSAGE)"
-                ),
-            )
-        ]
-        if len(calls) != 2 or len(status_calls) != 1 or len(warning_calls) != 1:
-            errors.append("select_rtsp must perform only two fixed public UI calls")
-        forbidden_names = {"endpoint", "rtsp_entry", "rtsp_url", "rtsp_var"}
-        if any(
-            isinstance(node, ast.Name) and node.id in forbidden_names
-            for node in ast.walk(select_function)
-        ):
-            errors.append("select_rtsp must not solicit or retain endpoint text")
-
-    if any(function.name == "process_rtsp" for function in main_functions):
-        errors.append("main.py must not expose a process_rtsp path")
-    forbidden_main_methods = {"add_rtsp_stream", "process_rtsp"}
-    if any(
-        isinstance(node, ast.Attribute) and node.attr in forbidden_main_methods
-        for node in ast.walk(main_tree)
-    ):
-        errors.append("main.py reaches an RTSP runtime method")
-    if any(
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and "rtsp://" in node.value.casefold()
-        for node in ast.walk(main_tree)
-    ):
-        errors.append("main.py contains an endpoint-shaped UI value")
-
-    manager_functions = [
-        node for node in ast.walk(manager_tree) if isinstance(node, ast.FunctionDef)
-    ]
-    add_functions = [
-        node for node in manager_functions if node.name == "add_rtsp_stream"
-    ]
-    if len(add_functions) != 1:
-        errors.append("manager must contain exactly one RTSP denial method")
-    else:
-        body = add_functions[0].body
-        if (
-            len(body) != 3
-            or not isinstance(body[0], ast.Expr)
-            or not isinstance(body[0].value, ast.Constant)
-            or not isinstance(body[0].value.value, str)
-            or not isinstance(body[1], ast.Delete)
-            or len(body[1].targets) != 2
-            or not all(
-                isinstance(target, ast.Name) for target in body[1].targets
-            )
-            or [target.id for target in body[1].targets]
-            != ["rtsp_url", "stream_name"]
-            or not isinstance(body[2], ast.Raise)
-            or not isinstance(body[2].exc, ast.Name)
-            or body[2].exc.id != "RtspUnavailableError"
-            or body[2].cause is not None
-        ):
-            errors.append("manager RTSP denial must discard arguments then raise")
-        if any(isinstance(node, ast.Call) for node in ast.walk(add_functions[0])):
-            errors.append("manager RTSP denial must perform no calls")
-
-    video_functions = [
-        node for node in manager_functions if node.name == "add_video"
-    ]
-    if len(video_functions) != 1:
-        errors.append("manager must contain exactly one local-video entry method")
-    else:
-        video_body = video_functions[0].body
-        if (
-            len(video_body) < 2
-            or not isinstance(video_body[0], ast.Expr)
-            or not isinstance(video_body[0].value, ast.Constant)
-            or not isinstance(video_body[0].value.value, str)
-            or not isinstance(video_body[1], ast.Expr)
-            or not _is_expression(
-                video_body[1].value,
-                "reject_rtsp_transport(video_path)",
-            )
-        ):
-            errors.append("local-video entry must guard RTSP before any work")
-
-    forbidden_manager_names = {"is_rtsp", "rtsp_queue"}
-    if any(
-        (isinstance(node, ast.Name) and node.id in forbidden_manager_names)
-        or (isinstance(node, ast.Attribute) and node.attr in forbidden_manager_names)
-        for node in ast.walk(manager_tree)
-    ):
-        errors.append("manager retains a legacy RTSP processing surface")
-    if any(function.name == "_process_rtsp_wrapper" for function in manager_functions):
-        errors.append("manager retains the broken RTSP worker")
-
-    return tuple(errors)
 
 
 class RtspInputPolicyTests(unittest.TestCase):
@@ -253,6 +119,7 @@ class RtspInputPolicyTests(unittest.TestCase):
             "RTSP://camera.invalid/live",
             "  rtsp://camera.invalid/live",
             "\x00rTsPs://camera.invalid/live",
+            "\x7fRTSP://camera.invalid/live",
             "RTSPS://camera.invalid/live",
             "rtsp:opaque-camera-reference",
         )
@@ -348,6 +215,26 @@ class RtspSourceBindingTests(unittest.TestCase):
             encoding="utf-8"
         )
         main_mutations = {
+            "callback argument": main_source.replace(
+                "        def select_rtsp():",
+                "        def select_rtsp(endpoint):",
+                1,
+            ),
+            "callback decorator": main_source.replace(
+                "        def select_rtsp():",
+                "        @staticmethod\n        def select_rtsp():",
+                1,
+            ),
+            "rerouted RTSP button": main_source.replace(
+                "            command=select_rtsp,",
+                "            command=select_files,",
+                1,
+            ),
+            "misleading RTSP button label": main_source.replace(
+                '            text="RTSP Stream (Unavailable)",',
+                '            text="RTSP Stream",',
+                1,
+            ),
             "raw status": main_source.replace(
                 "self.status_var.set(RTSP_UNAVAILABLE_MESSAGE)",
                 "self.status_var.set(endpoint)",
@@ -367,15 +254,79 @@ class RtspSourceBindingTests(unittest.TestCase):
                 "self.process_rtsp(endpoint)",
                 1,
             ),
+            "retained attribute": main_source.replace(
+                'messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)",
+                'messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)\n"
+                "            self.saved_value = self.camera_source",
+                1,
+            ),
+            "retained alias": main_source.replace(
+                'messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)",
+                'messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)\n"
+                "            self.source_value = self.status_var.get()",
+                1,
+            ),
+            "fixed calls in dead branch": main_source.replace(
+                "            self.status_var.set(RTSP_UNAVAILABLE_MESSAGE)\n"
+                '            messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)",
+                "            if False:\n"
+                "                self.status_var.set("
+                "RTSP_UNAVAILABLE_MESSAGE)\n"
+                '                messagebox.showwarning("RTSP unavailable", '
+                "RTSP_UNAVAILABLE_MESSAGE)",
+                1,
+            ),
         }
         for label, mutated_main in main_mutations.items():
             with self.subTest(label=label):
+                self.assertNotEqual(main_source, mutated_main)
                 self.assertTrue(
                     rtsp_quarantine_errors(mutated_main, manager_source),
                     f"mutation escaped RTSP verifier: {label}",
                 )
 
         manager_mutations = {
+            "RTSP argument rename": manager_source.replace(
+                "def add_rtsp_stream(self, rtsp_url, stream_name):",
+                "def add_rtsp_stream(self, rtsp_url, camera_name):",
+                1,
+            ),
+            "RTSP argument default": manager_source.replace(
+                "def add_rtsp_stream(self, rtsp_url, stream_name):",
+                "def add_rtsp_stream(self, rtsp_url, stream_name=None):",
+                1,
+            ),
+            "RTSP variadic argument": manager_source.replace(
+                "def add_rtsp_stream(self, rtsp_url, stream_name):",
+                "def add_rtsp_stream(self, rtsp_url, stream_name, *extra):",
+                1,
+            ),
+            "RTSP method decorator": manager_source.replace(
+                "    def add_rtsp_stream(self, rtsp_url, stream_name):",
+                "    @staticmethod\n"
+                "    def add_rtsp_stream(self, rtsp_url, stream_name):",
+                1,
+            ),
+            "local-video argument rename": manager_source.replace(
+                "def add_video(self, video_path):",
+                "def add_video(self, source_path):",
+                1,
+            ),
+            "local-video argument default": manager_source.replace(
+                "def add_video(self, video_path):",
+                "def add_video(self, video_path=None):",
+                1,
+            ),
+            "local-video method decorator": manager_source.replace(
+                "    def add_video(self, video_path):",
+                "    @staticmethod\n    def add_video(self, video_path):",
+                1,
+            ),
             "queue endpoint": manager_source.replace(
                 "del rtsp_url, stream_name\n        raise RtspUnavailableError",
                 "self.video_queue.put((rtsp_url, stream_name))",
@@ -407,6 +358,7 @@ class RtspSourceBindingTests(unittest.TestCase):
         }
         for label, mutated_manager in manager_mutations.items():
             with self.subTest(label=label):
+                self.assertNotEqual(manager_source, mutated_manager)
                 self.assertTrue(
                     rtsp_quarantine_errors(main_source, mutated_manager),
                     f"mutation escaped RTSP verifier: {label}",

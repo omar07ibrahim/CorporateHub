@@ -1,0 +1,140 @@
+{
+  "artifact": "corporatehub.rtsp-quarantine",
+  "cases": [
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "hostname-admitted",
+      "input_class": "credential-free hostname",
+      "observed_code": "rtsp-unavailable",
+      "passed": true,
+      "syntax": "admitted"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "ipv4-admitted",
+      "input_class": "documentation IPv4",
+      "observed_code": "rtsp-unavailable",
+      "passed": true,
+      "syntax": "admitted"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "ipv6-admitted",
+      "input_class": "documentation IPv6",
+      "observed_code": "rtsp-unavailable",
+      "passed": true,
+      "syntax": "admitted"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "userinfo-rejected",
+      "input_class": "credential-bearing userinfo",
+      "observed_code": "rtsp-credentials-forbidden",
+      "passed": true,
+      "syntax": "rejected"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "query-rejected",
+      "input_class": "query-bearing endpoint",
+      "observed_code": "rtsp-query-forbidden",
+      "passed": true,
+      "syntax": "rejected"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "fragment-rejected",
+      "input_class": "fragment-bearing endpoint",
+      "observed_code": "rtsp-fragment-forbidden",
+      "passed": true,
+      "syntax": "rejected"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "parent-path-rejected",
+      "input_class": "parent path segment",
+      "observed_code": "rtsp-path-ambiguous",
+      "passed": true,
+      "syntax": "rejected"
+    },
+    {
+      "allowed": false,
+      "boundary": "syntax admission",
+      "id": "encoded-slash-rejected",
+      "input_class": "encoded path separator",
+      "observed_code": "rtsp-path-ambiguous",
+      "passed": true,
+      "syntax": "rejected"
+    },
+    {
+      "allowed": false,
+      "boundary": "local-video ingress",
+      "id": "local-ingress-rtsp",
+      "input_class": "RTSP transport at file ingress",
+      "observed_code": "rtsp-unavailable",
+      "passed": true,
+      "syntax": "blocked-before-file"
+    },
+    {
+      "allowed": false,
+      "boundary": "runtime availability",
+      "id": "runtime-gate",
+      "input_class": "admitted credential-free source",
+      "observed_code": "rtsp-unavailable",
+      "passed": true,
+      "syntax": "admitted-then-denied"
+    }
+  ],
+  "decision": {
+    "allowed": false,
+    "code": "rtsp-unavailable",
+    "label": "RTSP source",
+    "message": "RTSP capture is unavailable because the vendor runtime and live-camera lifecycle have not been verified."
+  },
+  "privacy": {
+    "endpoint_values_serialized": 0,
+    "exception_messages_embed_input": false,
+    "public_fields": [
+      "allowed",
+      "code",
+      "label",
+      "message"
+    ],
+    "tracebacks_can_retain_input": true
+  },
+  "schema_version": 1,
+  "scope": {
+    "application_started": false,
+    "kind": "policy execution and AST source inspection",
+    "live_camera_requested": false,
+    "native_runtime_loaded": false,
+    "vendor_runtime_requested": false
+  },
+  "source_binding": {
+    "checked_entry_points": [
+      "main.py:select_rtsp",
+      "processing_manager.py:add_rtsp_stream",
+      "processing_manager.py:add_video"
+    ],
+    "status": "pass",
+    "violations": []
+  },
+  "source_sha256": {
+    "main.py": "17e62d6d6015c3233f974860864a89c0b45ec515ae70f41aa6f8f674f891cd9c",
+    "processing_manager.py": "1aa59970bc84567f2db78b66fe209c7cac47e8e3fb50a2bb7ecf18126274cb70",
+    "rtsp_evidence.py": "005745efde1cbea8ea23eb500c006d1d0e54614a8c50cf01103f0647cfa139f0",
+    "rtsp_policy.py": "8905c6b25feb222f6da3e7ba6f48dec152b49cd3ce930429c1cfd1f5e88439ae"
+  },
+  "summary": {
+    "failed": 0,
+    "passed": 10,
+    "total": 10
+  }
+}

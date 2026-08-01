@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="cli-title cli-desc">
+  <title id="cli-title">CorporateHub RTSP quarantine CLI receipt</title>
+  <desc id="cli-desc">Exact deterministic output of the source-only RTSP evidence check. It reports three bound entry points, ten passing policy cases, a denied capture decision, and zero serialized endpoints.</desc>
+  <rect width="1200" height="500" rx="24" fill="#07111f"/>
+  <rect x="28" y="28" width="1144" height="444" rx="18" fill="#0b1728" stroke="#24324a" stroke-width="2"/>
+  <circle cx="62" cy="62" r="8" fill="#fb7185"/>
+  <circle cx="88" cy="62" r="8" fill="#fbbf24"/>
+  <circle cx="114" cy="62" r="8" fill="#34d399"/>
+  <text x="146" y="70" fill="#94a3b8" font-size="18" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">python3 rtsp_evidence.py --check</text>
+  <rect x="930" y="48" width="104" height="30" rx="15" fill="#123d36"/>
+  <text x="982" y="69" text-anchor="middle" fill="#6ee7b7" font-size="13" font-weight="700" font-family="Arial,sans-serif">SOURCE ONLY</text>
+  <rect x="1044" y="48" width="88" height="30" rx="15" fill="#4c1d2f"/>
+  <text x="1088" y="69" text-anchor="middle" fill="#fda4af" font-size="13" font-weight="700" font-family="Arial,sans-serif">DENY</text>
+  <text x="72" y="126" fill="#34d399" font-size="22" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">$</text>
+  <text x="92" y="178" fill="#f8fafc" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">CorporateHub RTSP quarantine evidence v1</text>
+  <text x="92" y="220" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">source bindings       PASS (3/3)</text>
+  <text x="92" y="262" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">policy cases          PASS (10/10)</text>
+  <text x="92" y="304" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">capture decision      DENY / rtsp-unavailable</text>
+  <text x="92" y="346" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">serialized endpoints  0</text>
+  <text x="92" y="388" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">scope                  source-only; application not started</text>
+  <text x="92" y="430" fill="#cbd5e1" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="22">tracked artifacts      CURRENT (4/4)</text>
+</svg>
