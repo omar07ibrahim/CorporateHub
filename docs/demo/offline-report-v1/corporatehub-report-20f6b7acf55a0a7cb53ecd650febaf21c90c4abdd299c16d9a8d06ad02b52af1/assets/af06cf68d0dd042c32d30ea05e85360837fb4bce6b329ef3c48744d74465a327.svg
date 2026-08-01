@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">CorporateHub redacted offline report summary</title>
+  <desc id="desc">Source-generated chart of 4 redacted plate records and 9 observed detection rows. No identifiers, paths, timestamps, or images are included.</desc>
+  <rect width="1200" height="650" rx="28" fill="#07111f"/>
+  <text x="60" y="78" fill="#f8fafc" font-size="36" font-weight="700" font-family="Arial,sans-serif">Redacted offline snapshot</text>
+  <text x="60" y="116" fill="#94a3b8" font-size="18" font-family="Arial,sans-serif">Read-only SQLite transaction · no application or native runtime</text>
+  <rect x="60" y="154" width="250" height="116" rx="18" fill="#102238" stroke="#27415f"/>
+  <text x="84" y="194" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">PLATE RECORDS</text>
+  <text x="84" y="246" fill="#f8fafc" font-size="40" font-weight="700" font-family="Arial,sans-serif">4</text>
+  <rect x="330" y="154" width="250" height="116" rx="18" fill="#102238" stroke="#27415f"/>
+  <text x="354" y="194" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">OBSERVATION ROWS</text>
+  <text x="354" y="246" fill="#f8fafc" font-size="40" font-weight="700" font-family="Arial,sans-serif">9</text>
+  <rect x="600" y="154" width="250" height="116" rx="18" fill="#102238" stroke="#27415f"/>
+  <text x="624" y="194" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">REVIEW-FLAGGED</text>
+  <text x="624" y="246" fill="#fb7185" font-size="40" font-weight="700" font-family="Arial,sans-serif">2</text>
+  <rect x="870" y="154" width="270" height="116" rx="18" fill="#102238" stroke="#27415f"/>
+  <text x="894" y="194" fill="#94a3b8" font-size="15" font-weight="700" font-family="Arial,sans-serif">AVG. CONFIDENCE</text>
+  <text x="894" y="246" fill="#67e8f9" font-size="36" font-weight="700" font-family="Arial,sans-serif">82.7%</text>
+  <text x="60" y="316" fill="#7dd3fc" font-size="17" font-weight="700" font-family="Arial,sans-serif">OBSERVED CONFIDENCE DISTRIBUTION</text>
+  <text x="76" y="349" fill="#cbd5e1" font-size="16" font-family="Arial,sans-serif">unscored</text>
+  <rect x="238" y="330" width="590" height="28" rx="14" fill="#16263b"/>
+  <rect x="238" y="330" width="65.56" height="28" rx="14" fill="#38bdf8"/>
+  <text x="850" y="350" fill="#f8fafc" font-size="16" font-weight="700" font-family="Arial,sans-serif">1</text>
+  <text x="76" y="403" fill="#cbd5e1" font-size="16" font-family="Arial,sans-serif">below 60%</text>
+  <rect x="238" y="384" width="590" height="28" rx="14" fill="#16263b"/>
+  <rect x="238" y="384" width="65.56" height="28" rx="14" fill="#38bdf8"/>
+  <text x="850" y="404" fill="#f8fafc" font-size="16" font-weight="700" font-family="Arial,sans-serif">1</text>
+  <text x="76" y="457" fill="#cbd5e1" font-size="16" font-family="Arial,sans-serif">60–79.9%</text>
+  <rect x="238" y="438" width="590" height="28" rx="14" fill="#16263b"/>
+  <rect x="238" y="438" width="131.11" height="28" rx="14" fill="#38bdf8"/>
+  <text x="850" y="458" fill="#f8fafc" font-size="16" font-weight="700" font-family="Arial,sans-serif">2</text>
+  <text x="76" y="511" fill="#cbd5e1" font-size="16" font-family="Arial,sans-serif">80–89.9%</text>
+  <rect x="238" y="492" width="590" height="28" rx="14" fill="#16263b"/>
+  <rect x="238" y="492" width="131.11" height="28" rx="14" fill="#38bdf8"/>
+  <text x="850" y="512" fill="#f8fafc" font-size="16" font-weight="700" font-family="Arial,sans-serif">2</text>
+  <text x="76" y="565" fill="#cbd5e1" font-size="16" font-family="Arial,sans-serif">90–100%</text>
+  <rect x="238" y="546" width="590" height="28" rx="14" fill="#16263b"/>
+  <rect x="238" y="546" width="196.67" height="28" rx="14" fill="#38bdf8"/>
+  <text x="850" y="566" fill="#f8fafc" font-size="16" font-weight="700" font-family="Arial,sans-serif">3</text>
+  <rect x="920" y="330" width="220" height="220" rx="22" fill="#172033" stroke="#475569"/>
+  <text x="948" y="374" fill="#a7f3d0" font-size="15" font-weight="700" font-family="Arial,sans-serif">PRIVACY BOUNDARY</text>
+  <text x="948" y="416" fill="#f8fafc" font-size="17" font-family="Arial,sans-serif">Identifiers omitted</text>
+  <text x="948" y="450" fill="#f8fafc" font-size="17" font-family="Arial,sans-serif">Exact times omitted</text>
+  <text x="948" y="484" fill="#f8fafc" font-size="17" font-family="Arial,sans-serif">Images omitted</text>
+  <text x="948" y="518" fill="#f8fafc" font-size="17" font-family="Arial,sans-serif">Network disabled</text>
+  <text x="60" y="618" fill="#94a3b8" font-size="15" font-family="Arial,sans-serif">Redacted does not mean anonymous · review the bundle before sharing</text>
+</svg>

@@ -1,0 +1,183 @@
+{
+  "artifact": "corporatehub.offline-report.evidence",
+  "browser_capture": {
+    "browser_binary_sha256": "003728e0b77eb9d52e4d258594bd55ce22ecd245eb6d3b6858fbd844c901ad7d",
+    "browser_sandbox_enabled": false,
+    "bytes": 230001,
+    "capture_schema": "corporatehub.offline-report.chromium-capture.v1",
+    "capture_script_sha256": "ca18dd72b3b59b1cc2ddc3d9118a2e0c79060acb783515b2a063feef1f851ff0",
+    "color_profile": "sRGB",
+    "container_image": "mcr.microsoft.com/playwright@sha256:2f29369043d81d6d69a815ceb80760f55e85f5020371ad06a4d996f18503ad1c",
+    "container_isolation": "nonroot; read-only; no network; all capabilities dropped; no-new-privileges",
+    "decoded_scanlines_sha256": "557352ba2f60e9dd7ffddbdaf763a4ffa9dd815a947b0e726c2874052a4e3eeb",
+    "device_scale_factor": 1,
+    "font_environment": "pinned Playwright v1.55.1 Noble image defaults; pixel hash is environment-sensitive",
+    "height": 2200,
+    "index_sha256": "fcded95cb025d6b28a3622b557ca01193ce4d0ef9f1d12ea22150b47bee1c861",
+    "locale": "en-US",
+    "network_disabled": true,
+    "path": "docs/assets/offline-report-browser.png",
+    "renderer": "Chromium 140.0.7339.186",
+    "renderer_revision": 1193,
+    "report_id": "20f6b7acf55a0a7cb53ecd650febaf21c90c4abdd299c16d9a8d06ad02b52af1",
+    "sha256": "fcd69332bd023e55b0d7c7d06ff7ba4b867eb61b6ff12ce62f1a1639644c3fb9",
+    "summary_asset_sha256": "af06cf68d0dd042c32d30ea05e85360837fb4bce6b329ef3c48744d74465a327",
+    "timezone": "UTC",
+    "width": 1440
+  },
+  "bundle": {
+    "bundle_name": "corporatehub-report-20f6b7acf55a0a7cb53ecd650febaf21c90c4abdd299c16d9a8d06ad02b52af1",
+    "files": [
+      {
+        "bytes": 4809,
+        "path": "assets/af06cf68d0dd042c32d30ea05e85360837fb4bce6b329ef3c48744d74465a327.svg",
+        "sha256": "af06cf68d0dd042c32d30ea05e85360837fb4bce6b329ef3c48744d74465a327"
+      },
+      {
+        "bytes": 6812,
+        "path": "index.html",
+        "sha256": "fcded95cb025d6b28a3622b557ca01193ce4d0ef9f1d12ea22150b47bee1c861"
+      },
+      {
+        "bytes": 2583,
+        "path": "manifest.json",
+        "sha256": "d315915e15bae23f52c49291d95b0404e132211cdc5ba382b112e8983825ff0e"
+      }
+    ],
+    "idempotent": true,
+    "report_id": "20f6b7acf55a0a7cb53ecd650febaf21c90c4abdd299c16d9a8d06ad02b52af1",
+    "source_database_unchanged": true,
+    "summary": {
+      "average_confidence_pct": 82.7,
+      "blacklisted_records": 2,
+      "confidence_bands": [
+        {
+          "count": 1,
+          "label": "unscored"
+        },
+        {
+          "count": 1,
+          "label": "below 60%"
+        },
+        {
+          "count": 2,
+          "label": "60–79.9%"
+        },
+        {
+          "count": 2,
+          "label": "80–89.9%"
+        },
+        {
+          "count": 3,
+          "label": "90–100%"
+        }
+      ],
+      "observation_records": 9,
+      "plate_records": 4,
+      "scored_observations": 8
+    },
+    "verified": true
+  },
+  "fixture": {
+    "kind": "fixed synthetic SQLite",
+    "observation_records": 9,
+    "observations": [
+      {
+        "confidence": 96.2,
+        "id": 101,
+        "plate_id": 11
+      },
+      {
+        "confidence": 91.5,
+        "id": 102,
+        "plate_id": 11
+      },
+      {
+        "confidence": null,
+        "id": 103,
+        "plate_id": 11
+      },
+      {
+        "confidence": 82.0,
+        "id": 104,
+        "plate_id": 29
+      },
+      {
+        "confidence": 78.4,
+        "id": 105,
+        "plate_id": 29
+      },
+      {
+        "confidence": 58.3,
+        "id": 106,
+        "plate_id": 51
+      },
+      {
+        "confidence": 66.6,
+        "id": 107,
+        "plate_id": 77
+      },
+      {
+        "confidence": 88.8,
+        "id": 108,
+        "plate_id": 77
+      },
+      {
+        "confidence": 100.0,
+        "id": 109,
+        "plate_id": 77
+      }
+    ],
+    "plate_records": 4,
+    "plates": [
+      {
+        "blacklist_storage": 1,
+        "id": 11
+      },
+      {
+        "blacklist_storage": 0,
+        "id": 29
+      },
+      {
+        "blacklist_storage": null,
+        "id": 51
+      },
+      {
+        "blacklist_storage": 1,
+        "id": 77
+      }
+    ],
+    "schema": "corporatehub.offline-report.synthetic-fixture.v1",
+    "specification_sha256": "b2c30de8dea16237fba9ea8727d4196197f19aac9537d2b04b2a0cb55ac8b72b",
+    "subject": "public row layout and aggregate inputs; private canaries are bound by generator source hash"
+  },
+  "privacy": {
+    "fixture_canaries_serialized": 0,
+    "privacy_mode": "redacted-v1",
+    "raw_identifiers_selected": false,
+    "source_images_copied": 0,
+    "timestamps_selected": false
+  },
+  "schema_version": 1,
+  "scope": {
+    "application_started": false,
+    "database_kind": "generated synthetic fixture",
+    "gui_executed": false,
+    "native_runtime_loaded": false,
+    "network_required_by_bundle": false,
+    "source_images_opened": 0,
+    "vendor_runtime_loaded": false
+  },
+  "source_binding": {
+    "checked_entry_point": "report_panel.py:ReportPanel.export_report",
+    "status": "pass",
+    "violations": []
+  },
+  "source_set_sha256": "919655c4e67510aefce45ac11339516d77c4aa225a0c9129089ec9cd0b21ca3e",
+  "source_sha256": {
+    "report_evidence.py": "bd12da14d48d53e77ea4ea10939bd2874625557af4eae2f58f5715c5ee3437bc",
+    "report_export.py": "0ede95813768013ef8443c416e0dca1f5dd18bd256ae42a9e710fbeb50b5dfda",
+    "report_panel.py": "95a1596c5355efef4655d4ee369e7e144b269cd468d296da16e9aa0ec0501046",
+    "tools/capture_offline_report.sh": "ca18dd72b3b59b1cc2ddc3d9118a2e0c79060acb783515b2a063feef1f851ff0"
+  }
+}

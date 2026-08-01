@@ -1,0 +1,100 @@
+{
+  "analysis": {
+    "confidence_version": 1,
+    "observation_semantics": "stored plate_detections rows; no deduplication claim",
+    "similarity_analysis_included": false,
+    "template_version": 1,
+    "timestamp_fields_included": false
+  },
+  "artifact": "corporatehub.offline-report.bundle.v1",
+  "files": [
+    {
+      "bytes": 4809,
+      "media_type": "image/svg+xml",
+      "path": "assets/af06cf68d0dd042c32d30ea05e85360837fb4bce6b329ef3c48744d74465a327.svg",
+      "role": "generated-summary",
+      "sha256": "af06cf68d0dd042c32d30ea05e85360837fb4bce6b329ef3c48744d74465a327"
+    },
+    {
+      "bytes": 6812,
+      "media_type": "text/html; charset=utf-8",
+      "path": "index.html",
+      "role": "offline-report",
+      "sha256": "fcded95cb025d6b28a3622b557ca01193ce4d0ef9f1d12ea22150b47bee1c861"
+    }
+  ],
+  "privacy": {
+    "database_path_serialized": false,
+    "images": "omitted",
+    "mode": "redacted-v1",
+    "raw_text_fields": "omitted",
+    "shareability": "review-required"
+  },
+  "records": [
+    {
+      "average_confidence_pct": 93.8,
+      "observation_records": 3,
+      "peak_confidence_pct": 96.2,
+      "record_ref": "Record 001",
+      "review_flagged": true
+    },
+    {
+      "average_confidence_pct": 85.1,
+      "observation_records": 3,
+      "peak_confidence_pct": 100.0,
+      "record_ref": "Record 002",
+      "review_flagged": true
+    },
+    {
+      "average_confidence_pct": 80.2,
+      "observation_records": 2,
+      "peak_confidence_pct": 82.0,
+      "record_ref": "Record 003",
+      "review_flagged": false
+    },
+    {
+      "average_confidence_pct": 58.3,
+      "observation_records": 1,
+      "peak_confidence_pct": 58.3,
+      "record_ref": "Record 004",
+      "review_flagged": false
+    }
+  ],
+  "report_id": "20f6b7acf55a0a7cb53ecd650febaf21c90c4abdd299c16d9a8d06ad02b52af1",
+  "runtime": {
+    "application_started": false,
+    "database_access": "single read-only SQLite transaction",
+    "network_required": false,
+    "scripts_included": false,
+    "vendor_runtime_loaded": false
+  },
+  "summary": {
+    "average_confidence_pct": 82.7,
+    "blacklisted_records": 2,
+    "confidence_bands": [
+      {
+        "count": 1,
+        "label": "unscored"
+      },
+      {
+        "count": 1,
+        "label": "below 60%"
+      },
+      {
+        "count": 2,
+        "label": "60–79.9%"
+      },
+      {
+        "count": 2,
+        "label": "80–89.9%"
+      },
+      {
+        "count": 3,
+        "label": "90–100%"
+      }
+    ],
+    "observation_records": 9,
+    "plate_records": 4,
+    "scored_observations": 8
+  }
+}

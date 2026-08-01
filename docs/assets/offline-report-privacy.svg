@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="offline-privacy-title offline-privacy-description">
+  <title id="offline-privacy-title">CorporateHub offline report redaction boundary</title>
+  <desc id="offline-privacy-description">A comparison of the aggregate synthetic fields published by redacted-v1 and identifier, path, timestamp, profile, and image fields omitted.</desc>
+  <rect x="0" y="0" width="1200" height="560" rx="28" fill="#08131f"/>
+  <text x="48" y="62" fill="#f5f9ff" font-size="31" font-weight="700" font-family="Inter,Segoe UI,sans-serif">Redacted-v1 publication boundary</text>
+  <text x="48" y="100" fill="#a8b9cc" font-size="18" font-weight="400" font-family="Inter,Segoe UI,sans-serif">Observed from the fixed synthetic export · redaction reduces exposure, not all inference risk</text>
+  <rect x="48" y="140" width="520" height="338" rx="20" fill="#0c2c29" stroke="#2d8b70" stroke-width="2"/>
+  <rect x="632" y="140" width="520" height="338" rx="20" fill="#30231f" stroke="#a96b52" stroke-width="2"/>
+  <text x="80" y="185" fill="#6de2b7" font-size="19" font-weight="700" font-family="Inter,Segoe UI,sans-serif">SELECTED AGGREGATES</text>
+  <text x="664" y="185" fill="#ffb08e" font-size="19" font-weight="700" font-family="Inter,Segoe UI,sans-serif">OMITTED FROM PUBLIC BYTES</text>
+  <text x="82" y="232" fill="#e0fff3" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">✓  4 report-local records</text>
+  <text x="82" y="280" fill="#e0fff3" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">✓  9 observation rows</text>
+  <text x="82" y="328" fill="#e0fff3" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">✓  8 scored observations</text>
+  <text x="82" y="376" fill="#e0fff3" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">✓  2 review-flagged records</text>
+  <text x="82" y="424" fill="#e0fff3" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">✓  82.7% aggregate confidence</text>
+  <text x="666" y="232" fill="#ffe8df" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">—  raw plate identifiers</text>
+  <text x="666" y="280" fill="#ffe8df" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">—  profiles, reasons, and source names</text>
+  <text x="666" y="328" fill="#ffe8df" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">—  timestamps and filesystem paths</text>
+  <text x="666" y="376" fill="#ffe8df" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">—  source and cropped images</text>
+  <text x="666" y="424" fill="#ffe8df" font-size="19" font-weight="400" font-family="Inter,Segoe UI,sans-serif">—  fixture private-field canaries</text>
+  <rect x="48" y="500" width="1104" height="36" rx="12" fill="#13263a"/>
+  <text x="600" y="525" fill="#c9d8e8" font-size="17" font-weight="600" font-family="Inter,Segoe UI,sans-serif" text-anchor="middle">serialized fixture canaries: 0 · real data used: NO</text>
+</svg>

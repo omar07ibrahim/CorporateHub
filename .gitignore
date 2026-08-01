@@ -7,6 +7,14 @@ __pycache__/
 .coverage
 htmlcov/
 
+# Synthetic evidence staging and crash leftovers
+/.offline-report-evidence-*/
+/.offline-report-capture.*/
+/evidence/.offline-report-v1.json.*
+/docs/assets/.offline-report-*.svg.*
+/docs/assets/.offline-report-browser.png.*
+/docs/demo/offline-report-v1/**/.*.*
+
 # Local environments and configuration
 .env
 .env.*

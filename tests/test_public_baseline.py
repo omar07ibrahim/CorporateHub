@@ -77,6 +77,12 @@ REQUIRED_IGNORE_PATTERNS = frozenset(
         ".ruff_cache/",
         ".coverage",
         "htmlcov/",
+        "/.offline-report-evidence-*/",
+        "/.offline-report-capture.*/",
+        "/evidence/.offline-report-v1.json.*",
+        "/docs/assets/.offline-report-*.svg.*",
+        "/docs/assets/.offline-report-browser.png.*",
+        "/docs/demo/offline-report-v1/**/.*.*",
         ".env",
         ".env.*",
         "!.env.example",
@@ -947,6 +953,20 @@ class PublicBaselineTests(unittest.TestCase):
             "it does not establish who created it",
             "python3 report_export.py export",
             "content-addressed directory",
+            "Reproduce the synthetic browser demo",
+            "python3 report_evidence.py --check",
+            "tools/capture_offline_report.sh",
+            "docs/assets/offline-report-browser.png",
+            "docs/assets/offline-report-cli.svg",
+            "docs/assets/offline-report-flow.svg",
+            "docs/assets/offline-report-privacy.svg",
+            "evidence/offline-report-v1.json",
+            "fixed synthetic SQLite fixture",
+            "4 report-local records, 9 observation rows, 8 scored observations",
+            "not recognition accuracy, a benchmark, or surveillance output",
+            "It is not a Tkinter, DTK, video, LPR, or camera screenshot.",
+            "`--check` never launches Docker or a browser and never changes tracked artifacts",
+            "The tooling never auto-accepts it.",
             "The generated suffix namespace is reserved",
             (
                 "Raw recognition text remains in legacy database, UI, "
@@ -956,7 +976,7 @@ class PublicBaselineTests(unittest.TestCase):
             "Logging redaction is a later rehabilitation stage.",
             (
                 "imports the project-owned `path_policy`, `rtsp_policy`, "
-                "`rtsp_evidence`, and `report_export` modules"
+                "`rtsp_evidence`, `report_export`, and `report_evidence` modules"
             ),
             (
                 "does not import the GUI, mutable database wrapper, vendor "
@@ -1009,6 +1029,16 @@ class PublicBaselineTests(unittest.TestCase):
             "Python tracebacks retain frame locals",
             "never substitute a real camera URL",
             "secure memory erasure",
+            "Fixed synthetic evidence and browser-capture boundary",
+            "accepts no database, URL, image, timestamp, profile, plate identifier",
+            "Never substitute a real application database",
+            "no ancillary text, time, profile, EXIF, or trailing data",
+            "uses the already-cached container by full digest with `--pull=never`",
+            "Chromium runs with `--no-sandbox`",
+            "Docker daemon, host kernel/CPU",
+            "never auto-bless drift",
+            "no secure-memory or secure-erasure claim",
+            "not authorship, the identity or truth of a source database",
         }
         for statement in required_statements:
             with self.subTest(statement=statement):
@@ -1121,6 +1151,28 @@ class PublicBaselineTests(unittest.TestCase):
                 "xml",
             },
             imported_roots("report_export.py"),
+        )
+        self.assertEqual(
+            {
+                "__future__",
+                "argparse",
+                "ast",
+                "hashlib",
+                "html",
+                "json",
+                "os",
+                "pathlib",
+                "re",
+                "report_export",
+                "sqlite3",
+                "stat",
+                "struct",
+                "sys",
+                "tempfile",
+                "typing",
+                "zlib",
+            },
+            imported_roots("report_evidence.py"),
         )
 
     def test_video_write_policy_rejects_dead_calls_and_broken_dataflow(self) -> None:

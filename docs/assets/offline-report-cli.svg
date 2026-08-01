@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="520" viewBox="0 0 1240 520" role="img" aria-labelledby="offline-cli-title offline-cli-description">
+  <title id="offline-cli-title">Exact CorporateHub offline report evidence receipt</title>
+  <desc id="offline-cli-description">Terminal-style rendering of the same source-bound synthetic report receipt printed by the evidence checker.</desc>
+  <rect x="0" y="0" width="1240" height="520" rx="24" fill="#09111f"/>
+  <rect x="0" y="0" width="1240" height="64" rx="24" fill="#16243a"/>
+  <rect x="0" y="40" width="1240" height="24" fill="#16243a"/>
+  <circle cx="34" cy="32" r="8" fill="#ff6b6b"/>
+  <circle cx="60" cy="32" r="8" fill="#ffd166"/>
+  <circle cx="86" cy="32" r="8" fill="#60d394"/>
+  <text x="620" y="40" fill="#a9bdd8" font-size="18" font-weight="400" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="middle">python3 report_evidence.py --check</text>
+  <text x="48" y="106" fill="#e8f1ff" font-size="21" font-weight="700" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">CorporateHub offline report evidence v1</text>
+  <text x="48" y="153" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">GUI source binding     PASS (1/1)</text>
+  <text x="48" y="200" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">synthetic snapshot    PASS (4 records / 9 observations)</text>
+  <text x="48" y="247" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">bundle verification    PASS (20f6b7acf55a)</text>
+  <text x="48" y="294" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">private canaries      OMITTED (0 serialized)</text>
+  <text x="48" y="341" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">browser capture       BOUND (1440x2200 / DPR 1)</text>
+  <text x="48" y="388" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">source set            BOUND (919655c4e675)</text>
+  <text x="48" y="435" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">scope                   synthetic · offline · no GUI/native runtime</text>
+  <text x="48" y="482" fill="#b8f7d4" font-size="21" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">tracked artifacts       CURRENT (8/8)</text>
+</svg>

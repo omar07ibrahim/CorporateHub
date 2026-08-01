@@ -20,10 +20,12 @@ not currently implement encryption, authentication, authorization,
 general-purpose redaction outside the narrow offline-report boundary, retention
 enforcement, or a verified deletion workflow.
 
-Keep all generated data outside version control and restrict filesystem access
-at the operating-system boundary. Do not include credentials in RTSP URLs used
-for development evidence. Review images and reports for personal data before
-sharing them.
+Keep all operator/runtime-generated data outside version control and restrict
+filesystem access at the operating-system boundary. The only report exception
+is the fixed, generator-owned synthetic evidence under
+`docs/demo/offline-report-v1`, `docs/assets`, and `evidence`; it accepts no
+operator database. Do not include credentials in RTSP URLs used for development
+evidence. Review images and reports for personal data before sharing them.
 
 ## RTSP quarantine and diagnostic limits
 
@@ -124,6 +126,56 @@ expected report ID or external signature is required for provenance. The bundle
 is not encrypted, signed, access-controlled, or automatically deleted. Keep its
 parent private, outside the repository, and run
 `python3 report_export.py verify <bundle>` again before use or transfer.
+
+## Fixed synthetic evidence and browser-capture boundary
+
+Public offline-report evidence is generated only by `report_evidence.py`. It
+creates a fixed synthetic SQLite database in a private temporary directory,
+proves that unique private-field canaries are present in that source, runs the
+standalone exporter twice, verifies the bundle, proves the source database did
+not change, and rejects any serialized canary or host path. It accepts no
+database, URL, image, timestamp, profile, plate identifier, camera, or output
+argument from an operator. Never substitute a real application database into
+this public evidence path.
+
+The tracked PNG is a real page-only headless-Chromium rendering of that exact
+synthetic bundle. Visible pixels can disclose data even when PNG metadata is
+absent, so every changed image requires human visual inspection. The validator
+accepts only bounded 1440×2200, 8-bit RGB/RGBA, non-interlaced PNG data with
+`IHDR`, contiguous `IDAT`, and `IEND` chunks, valid CRCs, an exact decoded
+stream length, and no ancillary text, time, profile, EXIF, or trailing data.
+The receipt binds the reviewed PNG hash and dimensions to the report ID, HTML,
+generated SVG, capture script, exact container digest, Chromium version and
+binary hash, viewport, locale, timezone, and device scale factor.
+
+`tools/capture_offline_report.sh` first verifies the exact managed bundle, then
+uses the already-cached container by full digest with `--pull=never`, no
+network, a numeric non-root user, a read-only container root, all capabilities
+dropped, `no-new-privileges`, and CPU, memory, process, descriptor, and timeout
+limits. It mounts only the verified bundle read-only and one fresh output
+directory; it never mounts the repository root, home directory, Docker socket,
+or a runtime database. Chromium runs with `--no-sandbox` because its user-namespace
+sandbox is unavailable on this host. The outer container, Docker daemon, host
+kernel/CPU, and local image cache remain trust boundaries; this is not a
+hardened-browser-sandbox claim.
+
+`python3 report_evidence.py --check` regenerates the fixed export in private
+repository-local temporary storage and byte-compares the tracked artifacts. It
+does not change tracked artifacts or launch Docker or Chromium, but it is not a
+globally read-only operation and cannot prove that another machine would
+produce identical pixels. Recapture uses the exact documented browser and font
+image, but rendering can remain host-sensitive. A new screenshot hash must be
+manually inspected and deliberately bound; never auto-bless drift. Temporary
+fixture, browser profile, cache, and raw capture cleanup is best effort after
+process failure, with no secure-memory or secure-erasure claim. Residuals are
+synthetic-only, covered by narrow ignore rules, and should still be removed
+before committing.
+
+Content addressing and screenshot binding prove internal byte consistency, not
+authorship, the identity or truth of a source database, recognition accuracy,
+anonymity, authorization, performance, GUI behavior, camera operation, native
+DTK behavior, or production readiness. The tracked synthetic exception does
+not permit committing an operator-created report.
 
 No legacy artifact migration is included. Older folders or files whose names
 came directly from recognition text are not renamed, moved, deleted, or

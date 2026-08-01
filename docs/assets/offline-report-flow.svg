@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="offline-flow-title offline-flow-description">
+  <title id="offline-flow-title">CorporateHub synthetic offline report evidence flow</title>
+  <desc id="offline-flow-description">A fixed synthetic SQLite fixture is exported, verified, and rendered by isolated Chromium while the GUI and native recognition stack stay off.</desc>
+  <rect x="0" y="0" width="1200" height="500" rx="28" fill="#071426"/>
+  <text x="40" y="62" fill="#f7fbff" font-size="31" font-weight="700" font-family="Inter,Segoe UI,sans-serif">Executed synthetic offline-report workflow</text>
+  <text x="40" y="100" fill="#9cb2cf" font-size="20" font-weight="400" font-family="Inter,Segoe UI,sans-serif">GUI binding PASS by AST · GUI / DTK / camera NOT RUN</text>
+  <rect x="40" y="150" width="230" height="132" rx="18" fill="#112a45" stroke="#3e76a8" stroke-width="2"/>
+  <text x="60" y="185" fill="#66e0b4" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">1 · FIXTURE</text>
+  <text x="60" y="223" fill="#f0f6ff" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">4 records · 9 rows</text>
+  <text x="60" y="255" fill="#abc0d9" font-size="16" font-weight="400" font-family="Inter,Segoe UI,sans-serif">fixed synthetic SQLite</text>
+  <rect x="330" y="150" width="230" height="132" rx="18" fill="#112a45" stroke="#3e76a8" stroke-width="2"/>
+  <text x="350" y="185" fill="#66e0b4" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">2 · EXPORT</text>
+  <text x="350" y="223" fill="#f0f6ff" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">report_export.py</text>
+  <text x="350" y="255" fill="#abc0d9" font-size="16" font-weight="400" font-family="Inter,Segoe UI,sans-serif">read-only · redacted-v1</text>
+  <rect x="620" y="150" width="230" height="132" rx="18" fill="#112a45" stroke="#3e76a8" stroke-width="2"/>
+  <text x="640" y="185" fill="#66e0b4" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">3 · VERIFY</text>
+  <text x="640" y="223" fill="#f0f6ff" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">20f6b7acf55a</text>
+  <text x="640" y="255" fill="#abc0d9" font-size="16" font-weight="400" font-family="Inter,Segoe UI,sans-serif">HTML · JSON · SVG</text>
+  <rect x="910" y="150" width="250" height="132" rx="18" fill="#112a45" stroke="#3e76a8" stroke-width="2"/>
+  <text x="930" y="185" fill="#66e0b4" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">4 · RENDER</text>
+  <text x="930" y="223" fill="#f0f6ff" font-size="17" font-weight="700" font-family="Inter,Segoe UI,sans-serif">Chromium 140.0.7339.186</text>
+  <text x="930" y="255" fill="#abc0d9" font-size="16" font-weight="400" font-family="Inter,Segoe UI,sans-serif">network none · 1440×2200</text>
+  <line x1="270" y1="216" x2="318" y2="216" stroke="#66e0b4" stroke-width="4"/>
+  <polygon points="318,216 304,207 304,225" fill="#66e0b4"/>
+  <line x1="560" y1="216" x2="608" y2="216" stroke="#66e0b4" stroke-width="4"/>
+  <polygon points="608,216 594,207 594,225" fill="#66e0b4"/>
+  <line x1="850" y1="216" x2="898" y2="216" stroke="#66e0b4" stroke-width="4"/>
+  <polygon points="898,216 884,207 884,225" fill="#66e0b4"/>
+  <rect x="40" y="340" width="1120" height="108" rx="18" fill="#0d2138" stroke="#284b70"/>
+  <text x="68" y="380" fill="#66e0b4" font-size="19" font-weight="700" font-family="Inter,Segoe UI,sans-serif">Published evidence</text>
+  <text x="68" y="414" fill="#e9f2ff" font-size="20" font-weight="600" font-family="Inter,Segoe UI,sans-serif">verified bundle + canonical receipt + real PNG fcd69332bd02</text>
+  <text x="718" y="414" fill="#ffcc80" font-size="16" font-weight="400" font-family="Inter,Segoe UI,sans-serif">not recognition, accuracy, performance, or production evidence</text>
+</svg>
