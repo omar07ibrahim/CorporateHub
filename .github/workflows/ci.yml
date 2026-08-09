@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corporatehub-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUTF8: "1"
+
+jobs:
+  source-suite:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out the complete source boundary
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run the source-only and synthetic suite
+        run: python -W error -m unittest discover -s tests -v
+
+  evidence:
+    name: Evidence and source policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out the complete source boundary
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up exact evidence Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.2.0
+        with:
+          python-version: "3.11.9"
+      - name: Reproduce the RTSP quarantine evidence
+        run: python -W error rtsp_evidence.py --check
+      - name: Reproduce the offline report evidence
+        run: python -W error report_evidence.py --check
+      - name: Validate the constrained capture script
+        run: shellcheck --severity=warning tools/capture_offline_report.sh
+      - name: Reject tracked or untracked drift
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=all)"
