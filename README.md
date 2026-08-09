@@ -1,9 +1,12 @@
-# CorporateHub: static baseline for an LPR desktop prototype
+# CorporateHub: auditable offline reports for a legacy LPR prototype
 
-CorporateHub is a legacy Tkinter prototype for reviewing video files, passing
-frames to DTK license-plate-recognition bindings, recording detections in
-SQLite, and inspecting reports. This repository is being documented before
-runtime rehabilitation.
+[![CI](https://github.com/omar07ibrahim/CorporateHub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/omar07ibrahim/CorporateHub/actions/workflows/ci.yml) [![Python 3.11–3.14](https://img.shields.io/badge/Python-3.11--3.14-3776AB?logo=python&logoColor=white)](https://github.com/omar07ibrahim/CorporateHub/blob/main/.github/workflows/ci.yml)
+
+CorporateHub is a security-focused rehabilitation of a legacy Tkinter LPR
+prototype. The proprietary DTK/native recognition stack remains deliberately
+unclaimed; the implemented standard-library boundaries quarantine RTSP ingress
+and turn SQLite history into deterministic, redacted, content-addressed offline
+reports with reproducible Chromium evidence.
 
 The current entry point has **no authentication or authorization**. It launches
 as a trusted-local prototype and must not be exposed as a shared or remote
@@ -381,6 +384,8 @@ inspect its canonical manifest before sharing. See [SECURITY.md](SECURITY.md)
 before handling any real data.
 
 ## Source-only and synthetic verification
+
+[Hosted CI run #1](https://github.com/omar07ibrahim/CorporateHub/actions/runs/31336206918) executes all 111 source-only and synthetic tests on Python 3.11–3.14. Its exact Python 3.11.9 evidence job independently refresh-checks both evidence surfaces, validates the constrained capture script with ShellCheck, and rejects any tracked or untracked drift. It does not launch Docker, Chromium, the GUI, or DTK.
 
 The verification suite has only Python standard-library
 dependencies, invokes the Git CLI to enumerate commit candidates, and imports
